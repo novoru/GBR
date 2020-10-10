@@ -29,7 +29,7 @@ impl Io for Ram {
     }
     
     fn write16(&mut self, addr: usize, data: u16) {
-        self.ram[addr] = (data & 0xFF) as u8;
         self.ram[addr+1] = (data >> 8) as u8;
+        self.ram[addr] = (data & 0xFF) as u8;
     }
 }

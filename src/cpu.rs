@@ -12,13 +12,11 @@ bitflags! {
         const N     = 0b01000000;
         const H     = 0b00100000;
         const C     = 0b00010000;
+        const _3    = 0b00001000;
+        const _2    = 0b00000100;
+        const _1    = 0b00000010;
+        const _0    = 0b00000001;
         const NONE  = 0b00000000;
-    }
-}
-
-impl Default for Flags {
-    fn default() -> Flags {
-        Flags::NONE
     }
 }
 
@@ -34,6 +32,17 @@ pub struct Cpu {
     sp:     u16,
     pc:     u16,
     mmu:    Mmu,
+}
+
+impl fmt::Display for Cpu {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Cpu {{\n\ta = 0x{:02x}\n\tb = 0x{:02x}\n\td = 0x{:02x}\n\th = 0x{:02x}\n\
+                           \tc = 0x{:02x}\n\te = 0x{:02x}\n\tl = 0x{:02x}\n\tf = 0x{:02x}\n\
+                           \tsp= 0x{:04x}\n\tpc= 0x{:04x}\n}}",
+            self.a, self.b, self.d, self.h,
+            self.c, self.e, self.l, self.f,
+            self.sp, self.pc)
+    }
 }
 
 impl Cpu {
@@ -108,9 +117,29 @@ impl Cpu {
         self.l = (data & 0xFF) as u8;
     }
 
+    fn push(&mut self, data: u8) {
+        self.sp = self.sp.wrapping_sub(1);
+        self.mmu.write8(self.sp as usize, data);
+    }
+
+    fn pop(&mut self) -> u8 {
+        let addr = self.sp;
+        self.sp = addr.wrapping_add(1);
+        self.mmu.read8(addr as usize)
+    }
+
     fn decode(&mut self, opcode: u8) -> Instruction {
         match opcode {
-
+            0x01    =>  Instruction {
+                name:       "LD BC, nn",
+                opcode:     0x01,
+                cycles:     12,
+                operation:  |cpu| {
+                    let nn = cpu.fetch16();
+                    cpu.write_bc(nn);
+                    Ok(())
+                },
+            },
             0x02    =>  Instruction {
                 name:       "LD (BC), A",
                 opcode:     0x02,
@@ -129,6 +158,17 @@ impl Cpu {
                 operation:  |cpu| {
                     let n = cpu.fetch();
                     cpu.b = n;
+                    Ok(())
+                },
+            },
+            
+            0x08    =>  Instruction {
+                name:       "LD (nn), SP",
+                opcode:     0x08,
+                cycles:     20,
+                operation:  |cpu| {
+                    let addr = cpu.fetch16() as usize;
+                    cpu.mmu.write16(addr, cpu.sp);
                     Ok(())
                 },
             },
@@ -154,6 +194,16 @@ impl Cpu {
                 },
             },
             
+            0x11    =>  Instruction {
+                name:       "LD DE, nn",
+                opcode:     0x11,
+                cycles:     12,
+                operation:  |cpu| {
+                    let nn = cpu.fetch16();
+                    cpu.write_de(nn);
+                    Ok(())
+                },
+            },
             0x12    =>  Instruction {
                 name:       "LD (DE), A",
                 opcode:     0x02,
@@ -197,6 +247,16 @@ impl Cpu {
                 },
             },
 
+            0x21    =>  Instruction {
+                name:       "LD HL, nn",
+                opcode:     0x21,
+                cycles:     12,
+                operation:  |cpu| {
+                    let nn = cpu.fetch16();
+                    cpu.write_hl(nn);
+                    Ok(())
+                },
+            },
             0x22    =>  Instruction {
                 name:       "LDI (HL), A",
                 opcode:     0x22,
@@ -243,6 +303,16 @@ impl Cpu {
                 },
             },
             
+            0x31    =>  Instruction {
+                name:       "LD SP, nn",
+                opcode:     0x31,
+                cycles:     12,
+                operation:  |cpu| {
+                    let nn = cpu.fetch16();
+                    cpu.sp = nn;
+                    Ok(())
+                },
+            },
             0x32    =>  Instruction {
                 name:       "LDD (HL), A",
                 opcode:     0x32,
@@ -811,6 +881,50 @@ impl Cpu {
                 },
             },
 
+            0xC1    =>  Instruction {
+                name:       "POP BC",
+                opcode:     0xC1,
+                cycles:     12,
+                operation:  |cpu| {
+                    cpu.c = cpu.pop();
+                    cpu.b = cpu.pop();
+                    Ok(())
+                },
+            },
+
+            0xC5    =>  Instruction {
+                name:       "PUSH BC",
+                opcode:     0xC5,
+                cycles:     16,
+                operation:  |cpu| {
+                    cpu.push(cpu.b);
+                    cpu.push(cpu.c);
+                    Ok(())
+                },
+            },
+            
+            0xD1    =>  Instruction {
+                name:       "POP DE",
+                opcode:     0xD1,
+                cycles:     12,
+                operation:  |cpu| {
+                    cpu.e = cpu.pop();
+                    cpu.d = cpu.pop();
+                    Ok(())
+                },
+            },
+
+            0xD5    =>  Instruction {
+                name:       "PUSH DE",
+                opcode:     0xD5,
+                cycles:     16,
+                operation:  |cpu| {
+                    cpu.push(cpu.d);
+                    cpu.push(cpu.e);
+                    Ok(())
+                },
+            },
+
             0xE0    =>  Instruction {
                 name:       "LDH (n), A",
                 opcode:     0xE0,
@@ -822,6 +936,17 @@ impl Cpu {
                 },
             },
 
+            0xE1    =>  Instruction {
+                name:       "POP HL",
+                opcode:     0xE1,
+                cycles:     12,
+                operation:  |cpu| {
+                    cpu.l = cpu.pop();
+                    cpu.h = cpu.pop();
+                    Ok(())
+                },
+            },
+
             0xE2    =>  Instruction {
                 name:       "LD (C), A",
                 opcode:     0xE2,
@@ -829,6 +954,17 @@ impl Cpu {
                 operation:  |cpu| {
                     let addr = 0xFF00 + (cpu.c as usize);
                     cpu.mmu.write8(addr, cpu.a);
+                    Ok(())
+                },
+            },
+
+            0xE5    =>  Instruction {
+                name:       "PUSH HL",
+                opcode:     0xE5,
+                cycles:     16,
+                operation:  |cpu| {
+                    cpu.push(cpu.h);
+                    cpu.push(cpu.l);
                     Ok(())
                 },
             },
@@ -854,6 +990,17 @@ impl Cpu {
                     Ok(())
                 },
             },
+            
+            0xF1    =>  Instruction {
+                name:       "POP AF",
+                opcode:     0xF1,
+                cycles:     12,
+                operation:  |cpu| {
+                    cpu.f = Flags::from_bits_truncate(cpu.pop());
+                    cpu.a = cpu.pop();
+                    Ok(())
+                },
+            },
 
             0xF2    =>  Instruction {
                 name:       "LD A, (C)",
@@ -865,7 +1012,50 @@ impl Cpu {
                     Ok(())
                 },
             },
+            
+            0xF5    =>  Instruction {
+                name:       "PUSH AF",
+                opcode:     0xF5,
+                cycles:     16,
+                operation:  |cpu| {
+                    cpu.push(cpu.a);
+                    cpu.push(cpu.f.bits());
+                    Ok(())
+                },
+            },
 
+            0xF8    =>  Instruction {
+                name:       "LDHL SP, n",
+                opcode:     0xF8,
+                cycles:     12,
+                operation:  |cpu| {
+                    let n = cpu.fetch() as i8 as i16;
+                    let value = ((cpu.sp as i16).wrapping_add(n)) as u16;
+                    cpu.write_hl(value);
+                    cpu.f.remove(Flags::Z);
+                    cpu.f.remove(Flags::N);
+                    if n >= 0 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if cpu.sp > value {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0xF9    =>  Instruction {
+                name:       "LD BC, nn",
+                opcode:     0xF9,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.sp = cpu.read_hl();
+                    Ok(())
+                },
+            },
             0xFA    =>  Instruction {
                 name:       "LD A, (nn)",
                 opcode:     0xFA,
@@ -910,7 +1100,7 @@ fn test_ldbn() {
     cpu.tick();
     
     assert_eq!(cpu.b, 42);
-    assert_eq!(format!("{}", cpu.decode(opcode)), 
+    assert_eq!(cpu.decode(opcode).to_string(), 
             "Instruction { name='LD B, n', cycles=8, opcode=0x06 }")
 }
 
@@ -927,6 +1117,60 @@ fn test_ldr1r2() {
     cpu.tick();
     
     assert_eq!(cpu.a, 42);
-    assert_eq!(format!("{}", cpu.decode(opcode)), 
+    assert_eq!(cpu.decode(opcode).to_string(), 
             "Instruction { name='LD A, (HL)', cycles=8, opcode=0x7e }")
+}
+
+#[test]
+fn test_push() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xF5;  // PUSH AF
+
+    cpu.write_af(0xaadd);
+    cpu.sp = 0xFF;
+
+    cpu.mmu.write8(0x00, opcode);
+    cpu.tick();
+
+    assert_eq!(cpu.mmu.read8((cpu.sp+1) as usize), 0xaa);
+    assert_eq!(cpu.mmu.read8((cpu.sp) as usize), 0xdd);
+    assert_eq!(cpu.decode(opcode).to_string(), 
+            "Instruction { name=\'PUSH AF\', cycles=16, opcode=0xf5 }")
+}
+
+#[test]
+fn test_pop() {    
+    let mut cpu = Cpu::new();
+    let op_push = 0xC5;     // PUSH BC
+    let op_pop = 0xE1;      // POP hl
+
+    cpu.sp = 0xFF;
+    cpu.write_bc(0xaadd);
+    
+    cpu.mmu.write8(0x00, op_push);
+    cpu.mmu.write8(0x01, op_pop);
+    cpu.tick();
+    cpu.tick();
+
+    assert_eq!(cpu.h, 0xaa);
+    assert_eq!(cpu.l, 0xdd);
+    assert_eq!(cpu.decode(op_pop).to_string(), 
+            "Instruction { name=\'POP HL\', cycles=12, opcode=0xe1 }")
+}
+
+#[test]
+fn test_ldhl_sp_n() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xF8;      // LDHL SP, n
+    let n = 0xFA;           // n = -6
+
+    cpu.sp = 0x30;          // sp = 48
+    
+    cpu.mmu.write8(0x00, opcode);   // hl = sp + n = 48 + (-6)
+    cpu.mmu.write8(0x01, n as u8);
+    cpu.tick();
+
+    assert_eq!(cpu.l, 0x2A);
+    assert_eq!(cpu.decode(opcode).to_string(), 
+            "Instruction { name=\'LDHL SP, n\', cycles=12, opcode=0xf8 }")
 }
