@@ -21,7 +21,7 @@ impl Io for Ram {
     }
 
     fn read16(&self, addr: usize) -> u16 {
-        (self.ram[addr] as u16) << 8 | self.ram[addr+1] as u16
+        (self.ram[addr+1] as u16) << 8 | self.ram[addr] as u16
     }
 
     fn write8(&mut self, addr: usize, data: u8) {
@@ -29,7 +29,7 @@ impl Io for Ram {
     }
     
     fn write16(&mut self, addr: usize, data: u16) {
-        self.ram[addr] = (data >> 8) as u8;
-        self.ram[addr+1] = (data & 0xFF) as u8;
+        self.ram[addr] = (data & 0xFF) as u8;
+        self.ram[addr+1] = (data >> 8) as u8;
     }
 }
