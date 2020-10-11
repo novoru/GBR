@@ -150,7 +150,16 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0x03    =>  Instruction {
+                name:       "INC BC",
+                opcode:     0x03,
+                cycles:     8,
+                operation:  |cpu| {
+                    let bc = cpu.read_bc();
+                    cpu.write_bc(bc.wrapping_add(1));
+                    Ok(())
+                },
+            },
             0x04    =>  Instruction {
                 name:       "INC B",
                 opcode:     0x04,
@@ -214,7 +223,28 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0x09    =>  Instruction {
+                name:       "ADD HL, BC",
+                opcode:     0x09,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hl = cpu.read_hl();
+                    let bc = cpu.read_bc();
+                    cpu.write_hl(hl.wrapping_add(bc));
+                    cpu.f.remove(Flags::N);
+                    if (cpu.read_hl()^hl^bc)&0x0100 == 0x0100 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if cpu.read_hl() < hl {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
             0x0A    =>  Instruction {
                 name:       "LD A, (BC)",
                 opcode:     0x0A,
@@ -224,7 +254,16 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0x0B    =>  Instruction {
+                name:       "DEC BC",
+                opcode:     0x0B,
+                cycles:     8,
+                operation:  |cpu| {
+                    let bc = cpu.read_bc();
+                    cpu.write_bc(bc.wrapping_sub(1));
+                    Ok(())
+                },
+            },
             0x0C    =>  Instruction {
                 name:       "INC C",
                 opcode:     0x0C,
@@ -298,7 +337,16 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0x13    =>  Instruction {
+                name:       "INC DE",
+                opcode:     0x13,
+                cycles:     8,
+                operation:  |cpu| {
+                    let de = cpu.read_de();
+                    cpu.write_de(de.wrapping_add(1));
+                    Ok(())
+                },
+            },            
             0x14    =>  Instruction {
                 name:       "INC D",
                 opcode:     0x14,
@@ -352,6 +400,28 @@ impl Cpu {
                 },
             },
 
+            0x19    =>  Instruction {
+                name:       "ADD HL, DE",
+                opcode:     0x19,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hl = cpu.read_hl();
+                    let de = cpu.read_de();
+                    cpu.write_hl(hl.wrapping_add(de));
+                    cpu.f.remove(Flags::N);
+                    if (cpu.read_hl()^hl^de)&0x0100 == 0x0100 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if cpu.read_hl() < hl {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
             0x1A    =>  Instruction {
                 name:       "LD A, (DE)",
                 opcode:     0x1A,
@@ -361,7 +431,16 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0x1B    =>  Instruction {
+                name:       "DEC DE",
+                opcode:     0x1B,
+                cycles:     8,
+                operation:  |cpu| {
+                    let de = cpu.read_de();
+                    cpu.write_de(de.wrapping_sub(1));
+                    Ok(())
+                },
+            },
             0x1C    =>  Instruction {
                 name:       "INC E",
                 opcode:     0x1C,
@@ -436,7 +515,16 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0x23    =>  Instruction {
+                name:       "INC HL",
+                opcode:     0x23,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hl = cpu.read_hl();
+                    cpu.write_hl(hl.wrapping_add(1));
+                    Ok(())
+                },
+            },            
             0x24    =>  Instruction {
                 name:       "INC H",
                 opcode:     0x24,
@@ -490,6 +578,28 @@ impl Cpu {
                 },
             },
             
+            0x29    =>  Instruction {
+                name:       "ADD HL, HL",
+                opcode:     0x29,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hl1 = cpu.read_hl();
+                    let hl2 = cpu.read_hl();
+                    cpu.write_hl(hl1.wrapping_add(hl2));
+                    cpu.f.remove(Flags::N);
+                    if (cpu.read_hl()^hl1^hl2)&0x0100 == 0x0100 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if cpu.read_hl() < hl1 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
             0x2A    =>  Instruction {
                 name:       "LDI A, (HL)",
                 opcode:     0x2A,
@@ -501,7 +611,16 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0x2B    =>  Instruction {
+                name:       "DEC HL",
+                opcode:     0x2B,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hl = cpu.read_hl();
+                    cpu.write_hl(hl.wrapping_sub(1));
+                    Ok(())
+                },
+            },            
             0x2C    =>  Instruction {
                 name:       "INC L",
                 opcode:     0x2C,
@@ -576,7 +695,15 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0x33    =>  Instruction {
+                name:       "INC SP",
+                opcode:     0x33,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.sp = cpu.sp.wrapping_add(1);
+                    Ok(())
+                },
+            },            
             0x34    =>  Instruction {
                 name:       "INC (HL)",
                 opcode:     0x34,
@@ -632,6 +759,28 @@ impl Cpu {
                 },
             },
             
+            0x39    =>  Instruction {
+                name:       "ADD HL, SP",
+                opcode:     0x19,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hl = cpu.read_hl();
+                    let sp = cpu.sp;
+                    cpu.write_hl(hl.wrapping_add(sp));
+                    cpu.f.remove(Flags::N);
+                    if (cpu.read_hl()^hl^sp)&0x0100 == 0x0100 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if cpu.read_hl() < hl {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
             0x3A    =>  Instruction {
                 name:       "LDD A, (HL)",
                 opcode:     0x3A,
@@ -643,7 +792,15 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0x3B    =>  Instruction {
+                name:       "DEC SP",
+                opcode:     0x3B,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.sp = cpu.sp.wrapping_sub(1);
+                    Ok(())
+                },
+            },            
             0x3C    =>  Instruction {
                 name:       "INC A",
                 opcode:     0x3C,
@@ -2954,6 +3111,31 @@ impl Cpu {
                 },
             },
 
+            0xE8    =>  Instruction {
+                name:       "ADD SP, #",
+                opcode:     0xE8,
+                cycles:     16,
+                operation:  |cpu| {
+                    let sp = cpu.sp;
+                    let n = cpu.fetch() as i8 as i16;
+                    cpu.sp = (sp as i16).wrapping_add(n) as u16;
+                    cpu.f.remove(Flags::Z);
+                    cpu.f.remove(Flags::N);
+                    let c = (sp ^ n as u16) ^ (sp.wrapping_add(n as u16));
+                    if c & 0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if c & 0x100 == 0x100 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+
             0xEA    =>  Instruction {
                 name:       "LD (nn), A",
                 opcode:     0xEA,
@@ -3483,4 +3665,54 @@ fn test_dec() {
     cpu.tick();
 
     assert_eq!(cpu.a, 0xFF);
+}
+
+#[test]
+fn test_addhln() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x09;      // ADD HL, BC
+    cpu.write_hl(0xFFF0);
+    cpu.write_bc(0x10);
+    
+    cpu.mmu.write8(0x00, opcode);   // a = hl + bc
+    cpu.tick();
+
+    assert_eq!(cpu.read_hl(), 0x00);
+}
+
+#[test]
+fn test_addspn() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xE8;      // ADD SP, #
+    cpu.sp = 0xFFF0;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = sp + #
+    cpu.mmu.write8(0x01, 0x10);
+    cpu.tick();
+
+    assert_eq!(cpu.sp, 0x00);
+}
+
+#[test]
+fn test_incnn() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x03;      // INC BC
+    cpu.write_bc(0xFFF0);
+    
+    cpu.mmu.write8(0x00, opcode);   // a = bc + 1
+    cpu.tick();
+
+    assert_eq!(cpu.read_bc(), 0xFFF1);
+}
+
+#[test]
+fn test_decnn() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x0B;      // DEC BC
+    cpu.write_bc(0xFFF0);
+    
+    cpu.mmu.write8(0x00, opcode);   // a = bc - 1
+    cpu.tick();
+
+    assert_eq!(cpu.read_bc(), 0xFFEF);
 }
