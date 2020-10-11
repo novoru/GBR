@@ -1323,6 +1323,448 @@ impl Cpu {
                     Ok(())
                 },
             },
+            0x90    =>  Instruction {
+                name:       "SUB A, B",
+                opcode:     0x90,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.b;
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x91    =>  Instruction {
+                name:       "SUB A, C",
+                opcode:     0x91,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.c;
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x92    =>  Instruction {
+                name:       "SUB A, D",
+                opcode:     0x92,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.d;
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x93    =>  Instruction {
+                name:       "SUB A, E",
+                opcode:     0x97,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.e;
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x94    =>  Instruction {
+                name:       "SUB A, H",
+                opcode:     0x94,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.h;
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x95    =>  Instruction {
+                name:       "SUB A, L",
+                opcode:     0x95,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.l;
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x96    =>  Instruction {
+                name:       "SUB A, (HL)",
+                opcode:     0x96,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            
+            0x97    =>  Instruction {
+                name:       "SUB A, A",
+                opcode:     0x97,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.a;
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x98    =>  Instruction {
+                name:       "SBC A, B",
+                opcode:     0x98,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.b.wrapping_add(c);
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x99    =>  Instruction {
+                name:       "SBC A, C",
+                opcode:     0x99,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.c.wrapping_add(c);
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x9A    =>  Instruction {
+                name:       "SBC A, D",
+                opcode:     0x9A,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.d.wrapping_add(c);
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x9B    =>  Instruction {
+                name:       "SBC A, E",
+                opcode:     0x9B,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.e.wrapping_add(c);
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x9C    =>  Instruction {
+                name:       "SBC A, H",
+                opcode:     0x9C,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.h.wrapping_add(c);
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x9D    =>  Instruction {
+                name:       "SBC A, L",
+                opcode:     0x9D,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.l.wrapping_add(c);
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x9E    =>  Instruction {
+                name:       "SBC A, (HL)",
+                opcode:     0x9E,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.mmu.read8(cpu.read_hl() as usize).wrapping_add(c);
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+
+            0x9F    =>  Instruction {
+                name:       "SBC A, A",
+                opcode:     0x9F,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.a.wrapping_add(c);
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
 
             0xC1    =>  Instruction {
                 name:       "POP BC",
@@ -1420,6 +1862,62 @@ impl Cpu {
                 operation:  |cpu| {
                     cpu.push(cpu.d);
                     cpu.push(cpu.e);
+                    Ok(())
+                },
+            },
+            0xD6    =>  Instruction {
+                name:       "SUB A, #",
+                opcode:     0xD6,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.fetch();
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            
+            0xDE    =>  Instruction {
+                name:       "SBC A, #",
+                opcode:     0xDE,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.fetch().wrapping_add(c);
+                    cpu.a = a.wrapping_sub(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
                     Ok(())
                 },
             },
@@ -1566,7 +2064,7 @@ impl Cpu {
                 },
             },
 
-            _       =>  panic!("can't decode: 0x{:02x}", opcode),
+            _       =>  unimplemented!("can't decode: 0x{:02x}", opcode),
         }
     }
 
@@ -1761,6 +2259,95 @@ fn test_adcan() {
     assert_eq!(cpu.a, 0);
     assert_eq!((cpu.f & Flags::Z) == Flags::Z, true);
     assert_eq!((cpu.f & Flags::N) == Flags::N, false);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, true);
+}
+
+#[test]
+fn test_suban() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x90;      // SUB A, B
+    cpu.a = 0x0F;
+    cpu.b = 0x0F;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a - b
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0x00);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, true);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
+
+    cpu.pc = 0;
+    cpu.a = 0x20;
+    cpu.b = 0x12;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a - b
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0x0E);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, true);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
+    
+    cpu.pc = 0;
+    cpu.a = 0xE0;
+    cpu.b = 0xF0;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a - b
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0xF0);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, true);
+}
+
+#[test]
+fn test_sbcan() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x98;      // SBC A, B
+    cpu.a = 0x0F;
+    cpu.b = 0x0E;
+    cpu.f.insert(Flags::C);
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a - b - carry flag
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0x00);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, true);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
+
+    cpu.pc = 0;
+    cpu.a = 0x20;
+    cpu.b = 0x11;
+    cpu.f.insert(Flags::C);
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a - b - carry flag
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0x0E);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, true);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
+    
+    cpu.pc = 0;
+    cpu.a = 0xE0;
+    cpu.b = 0xEF;
+    cpu.f.insert(Flags::C);
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a - b - carry flag
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0xF0);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
     assert_eq!((cpu.f & Flags::H) == Flags::H, false);
     assert_eq!((cpu.f & Flags::C) == Flags::C, true);
 }
