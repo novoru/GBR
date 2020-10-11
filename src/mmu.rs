@@ -1,10 +1,12 @@
 use crate::io::Io;
 use crate::ram::Ram;
 use crate::cartridge::Cartridge;
+use crate::interrupt::*;
 
 pub struct Mmu {
     cartridge:  Cartridge,
     ram:        Ram,
+    interrupt:  Interrupt,
 }
 
 impl Mmu {
@@ -12,7 +14,16 @@ impl Mmu {
         Mmu {
             cartridge:  cartridge,
             ram:        Ram::new(),
+            interrupt:  Interrupt::new(),
         }
+    }
+
+    pub fn enable_irq(&mut self) {
+        self.interrupt.enable()
+    }
+
+    pub fn disable_irq(&mut self) {
+        self.interrupt.disable()
     }
 }
 
@@ -37,12 +48,14 @@ impl Io for Mmu {
             0xFEA0 ..= 0xFEFF   =>  panic!("unsupport read at {:04x}", addr),
             // I/O ports
             // 0xFF00 ..= 0xFF3B   =>  self.ioports.read8(addr),
+            // Interrupt Flag Register
+            0xFF0F              =>  self.interrupt.read8(addr),
             // Empty but unusable for I/O
             0xFF4C ..= 0xFF7F   =>  panic!("unsupport read at {:04x}", addr),
             // Internal RAM
             // 0xFF80 ..= 0xFFFE   =>  self.ram.read8(addr),
             // Interrupt Enable Register
-            // 0xFFFF              =>  self.ier.read8(addr),
+            0xFFFF              =>  self.interrupt.read8(addr),
             _                   =>  unimplemented!(),
         }
     }
@@ -67,12 +80,14 @@ impl Io for Mmu {
             0xFEA0 ..= 0xFEFF   =>  panic!("unsupport read at {:04x}", addr),
             // I/O ports
             // 0xFF00 ..= 0xFF3B   =>  self.ioports.read16(addr),
+            // Interrupt Flag Register
+            0xFF0F              =>  self.interrupt.read16(addr),
             // Empty but unusable for I/O
             0xFF4C ..= 0xFF7F   =>  panic!("unsupport read at {:04x}", addr),
             // Internal RAM
             // 0xFF80 ..= 0xFFFE   =>  self.ram.read16(addr),
             // Interrupt Enable Register
-            // 0xFFFF              =>  self.ier.read16(addr),
+            0xFFFF              =>  self.interrupt.read16(addr),
             _                   =>  unimplemented!(),
         }
     }
@@ -97,12 +112,14 @@ impl Io for Mmu {
             0xFEA0 ..= 0xFEFF   =>  panic!("unsupport write at {:04x}", addr),
             // I/O ports
             // 0xFF00 ..= 0xFF3B   =>  self.ioports.write8(addr),
+            // Interrupt Flag Register
+            0xFF0F              =>  self.interrupt.write8(addr, data),
             // Empty but unusable for I/O
             0xFF4C ..= 0xFF7F   =>  panic!("unsupport write at {:04x}", addr),
             // Internal RAM
             // 0xFF80 ..= 0xFFFE   =>  self.ram.write8(addr),
             // Interrupt Enable Register
-            // 0xFFFF              =>  self.ier.write8(addr),
+            0xFFFF              =>  self.interrupt.write8(addr, data),
             _                   =>  unimplemented!(),
         }
     }
@@ -127,12 +144,14 @@ impl Io for Mmu {
             0xFEA0 ..= 0xFEFF   =>  panic!("unsupport write at {:04x}", addr),
             // I/O ports
             // 0xFF00 ..= 0xFF3B   =>  self.ioports.write16(addr),
+            // Interrupt Flag Register
+            0xFF0F              =>  self.interrupt.write16(addr, data),
             // Empty but unusable for I/O
             0xFF4C ..= 0xFF7F   =>  panic!("unsupport write at {:04x}", addr),
             // Internal RAM
             // 0xFF80 ..= 0xFFFE   =>  self.ram.write16(addr),
             // Interrupt Enable Register
-            // 0xFFFF              =>  self.ier.write16(addr),
+            0xFFFF              =>  self.interrupt.write16(addr, data),
             _                   =>  unimplemented!(),
         }
     }

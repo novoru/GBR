@@ -130,6 +130,14 @@ impl Cpu {
 
     fn decode(&mut self, opcode: u8) -> Instruction {
         match opcode {
+            0x00    =>  Instruction {
+                name:       "NOP",
+                opcode:     0x00,
+                cycles:     4,
+                operation:  |_| {
+                    Ok(())
+                },
+            },
             0x01    =>  Instruction {
                 name:       "LD BC, nn",
                 opcode:     0x01,
@@ -317,6 +325,15 @@ impl Cpu {
                 },
             },
             
+            0x10    =>  Instruction {
+                name:       "STOP",
+                opcode:     0x10,
+                cycles:     4,
+                operation:  |_| {
+                    // TODO
+                    Ok(())
+                },
+            },
             0x11    =>  Instruction {
                 name:       "LD DE, nn",
                 opcode:     0x11,
@@ -577,6 +594,41 @@ impl Cpu {
                     Ok(())
                 },
             },
+            0x27    =>  Instruction {
+                name:       "DAA",
+                opcode:     0x27,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    if cpu.f & Flags::N == Flags::N {
+                        if cpu.f & Flags::H == Flags::H || a&0x0F > 0x09 {
+                            cpu.a = a.wrapping_add(0x06);
+                        }
+                        if cpu.f & Flags::C == Flags::H || a > 0x9F {
+                            cpu.a = a.wrapping_add(0x60);
+                        }
+                    } else {
+                        if cpu.f & Flags::H == Flags::H {
+                            cpu.a = a.wrapping_sub(0x06);
+                        }
+                        if cpu.f & Flags::C == Flags::C {
+                            cpu.a = a.wrapping_sub(0x60);
+                        }
+                    }
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::H);
+                    if cpu.a < a {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
             
             0x29    =>  Instruction {
                 name:       "ADD HL, HL",
@@ -673,6 +725,17 @@ impl Cpu {
                     Ok(())
                 },
             },
+            0x2F    =>  Instruction {
+                name:       "CPL",
+                opcode:     0x2F,
+                cycles:     4,
+                operation:  |cpu| {
+                    cpu.a = !cpu.a;
+                    cpu.f.insert(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
             
             0x31    =>  Instruction {
                 name:       "LD SP, nn",
@@ -755,6 +818,17 @@ impl Cpu {
                 operation:  |cpu| {
                     let n = cpu.fetch();
                     cpu.mmu.write8(cpu.read_hl() as usize, n);
+                    Ok(())
+                },
+            },
+            0x37    =>  Instruction {
+                name:       "SCF",
+                opcode:     0x37,
+                cycles:     4,
+                operation:  |cpu| {
+                    cpu.f.insert(Flags::C);
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
                     Ok(())
                 },
             },
@@ -853,7 +927,21 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0x3F    =>  Instruction {
+                name:       "CCF",
+                opcode:     0x3F,
+                cycles:     4,
+                operation:  |cpu| {
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.f.remove(Flags::C);
+                    } else {
+                        cpu.f.insert(Flags::C);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    Ok(())
+                },
+            },
             0x40    =>  Instruction {
                 name:       "LD B, B",
                 opcode:     0x40,
@@ -1291,8 +1379,15 @@ impl Cpu {
                     Ok(())
                 },
             },
-
-            
+            0x76    =>  Instruction {
+                name:       "HALT",
+                opcode:     0x76,
+                cycles:     4,
+                operation:  |_| {
+                    // TODO
+                    Ok(())
+                },
+            },            
             0x77    =>  Instruction {
                 name:       "LD (HL), A",
                 opcode:     0x77,
@@ -2940,6 +3035,11 @@ impl Cpu {
                     Ok(())
                 },
             },
+
+            0xCB    =>  {
+                let opcode_cb = self.fetch();
+                self.decode_cb(opcode_cb)
+            },
             
             0xCE    =>  Instruction {
                 name:       "ADC A, #",
@@ -3199,7 +3299,16 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0xF3    =>  Instruction {
+                name:       "DI",
+                opcode:     0xF3,
+                cycles:     4,
+                operation:  |cpu| {
+                    cpu.mmu.disable_irq();
+                    Ok(())
+                },
+            },
+
             0xF5    =>  Instruction {
                 name:       "PUSH AF",
                 opcode:     0xF5,
@@ -3271,6 +3380,15 @@ impl Cpu {
                     Ok(())
                 },
             },
+            0xFB    =>  Instruction {
+                name:       "EI",
+                opcode:     0xFB,
+                cycles:     4,
+                operation:  |cpu| {
+                    cpu.mmu.enable_irq();
+                    Ok(())
+                },
+            },
 
             0xFE    =>  Instruction {
                 name:       "CP A, #",
@@ -3299,6 +3417,146 @@ impl Cpu {
                 },
             },
 
+            _       =>  unimplemented!("can't decode: 0x{:02x}", opcode),
+        }
+    }
+
+    fn decode_cb(&mut self, opcode: u8) -> Instruction {
+        match opcode {
+            0x30    =>  Instruction {
+                name:       "SWAP B",
+                opcode:     0x30,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hi = cpu.b & 0xF0;
+                    let lo = cpu.b & 0x0F;
+                    cpu.b = hi | lo;
+                    if cpu.b == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0x31    =>  Instruction {
+                name:       "SWAP C",
+                opcode:     0x31,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hi = cpu.c & 0xF0;
+                    let lo = cpu.c & 0x0F;
+                    cpu.c = hi | lo;
+                    if cpu.c == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0x32    =>  Instruction {
+                name:       "SWAP D",
+                opcode:     0x30,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hi = cpu.d & 0xF0;
+                    let lo = cpu.d & 0x0F;
+                    cpu.d = hi | lo;
+                    if cpu.d == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0x33    =>  Instruction {
+                name:       "SWAP E",
+                opcode:     0x30,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hi = cpu.e & 0xF0;
+                    let lo = cpu.e & 0x0F;
+                    cpu.e = hi | lo;
+                    if cpu.e == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0x34    =>  Instruction {
+                name:       "SWAP H",
+                opcode:     0x30,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hi = cpu.h & 0xF0;
+                    let lo = cpu.h & 0x0F;
+                    cpu.h = hi | lo;
+                    if cpu.h == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0x35    =>  Instruction {
+                name:       "SWAP L",
+                opcode:     0x35,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hi = cpu.l & 0xF0;
+                    let lo = cpu.l & 0x0F;
+                    cpu.l = hi | lo;
+                    if cpu.l == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0x36    =>  Instruction {
+                name:       "SWAP (HL)",
+                opcode:     0x36,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    let hi = cpu.mmu.read8(addr) & 0xF0;
+                    let lo = cpu.mmu.read8(addr) & 0x0F;
+                    cpu.mmu.write8(addr, hi | lo);
+                    if cpu.mmu.read8(addr) == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
             _       =>  unimplemented!("can't decode: 0x{:02x}", opcode),
         }
     }

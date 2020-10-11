@@ -15,7 +15,6 @@ impl Ram {
 }
 
 impl Io for Ram {
-
     fn read8(&self, addr: usize) -> u8 {
         self.ram[addr]
     }
