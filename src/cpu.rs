@@ -220,7 +220,28 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0x07    =>  Instruction {
+                name:       "RLCA",
+                opcode:     0x07,
+                cycles:     4,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x80 == 0x80;
+                    cpu.a = cpu.a.rotate_left(1);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },            
             0x08    =>  Instruction {
                 name:       "LD (nn), SP",
                 opcode:     0x08,
@@ -324,7 +345,28 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0x0F    =>  Instruction {
+                name:       "RRCA",
+                opcode:     0x0F,
+                cycles:     4,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x01 == 0x01;
+                    cpu.a = cpu.a.rotate_right(1);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },                 
             0x10    =>  Instruction {
                 name:       "STOP",
                 opcode:     0x10,
@@ -413,6 +455,31 @@ impl Cpu {
                 operation:  |cpu| {
                     let n = cpu.fetch();
                     cpu.d = n;
+                    Ok(())
+                },
+            },
+            0x17    =>  Instruction {
+                name:       "RLA",
+                opcode:     0x17,
+                cycles:     4,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x80 == 0x80;
+                    cpu.a = cpu.a << 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.a |= 1;
+                    }
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
                     Ok(())
                 },
             },
@@ -507,6 +574,31 @@ impl Cpu {
                 operation:  |cpu| {
                     let n = cpu.fetch();
                     cpu.e = n;
+                    Ok(())
+                },
+            },
+            0x1F    =>  Instruction {
+                name:       "RRA",
+                opcode:     0x01F,
+                cycles:     4,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x01 == 0x01;
+                    cpu.a = cpu.a >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.a |= 0x80;
+                    }
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
                     Ok(())
                 },
             },
@@ -3423,6 +3515,1142 @@ impl Cpu {
 
     fn decode_cb(&mut self, opcode: u8) -> Instruction {
         match opcode {
+            0x00    =>  Instruction {
+                name:       "RLC B",
+                opcode:     0x00,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.b & 0x80 == 0x80;
+                    cpu.b = cpu.b.rotate_left(1);
+                    if cpu.b == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x01    =>  Instruction {
+                name:       "RLC C",
+                opcode:     0x01,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.c & 0x80 == 0x80;
+                    cpu.c = cpu.c.rotate_left(1);
+                    if cpu.c == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x02    =>  Instruction {
+                name:       "RLC D",
+                opcode:     0x02,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.d & 0x80 == 0x80;
+                    cpu.d = cpu.d.rotate_left(1);
+                    if cpu.d == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x03    =>  Instruction {
+                name:       "RLC E",
+                opcode:     0x03,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.e & 0x80 == 0x80;
+                    cpu.e = cpu.e.rotate_left(1);
+                    if cpu.e == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x04    =>  Instruction {
+                name:       "RLC H",
+                opcode:     0x04,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.h & 0x80 == 0x80;
+                    cpu.h = cpu.h.rotate_left(1);
+                    if cpu.h == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x05    =>  Instruction {
+                name:       "RLC L",
+                opcode:     0x05,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.l & 0x80 == 0x80;
+                    cpu.l = cpu.l.rotate_left(1);
+                    if cpu.l == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x06    =>  Instruction {
+                name:       "RLC (HL)",
+                opcode:     0x06,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    let carry = cpu.mmu.read8(addr) & 0x80 == 0x80;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr).rotate_left(1));
+                    if cpu.mmu.read8(addr) == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x07    =>  Instruction {
+                name:       "RLC A",
+                opcode:     0x07,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x80 == 0x80;
+                    cpu.a = cpu.a.rotate_left(1);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x08    =>  Instruction {
+                name:       "RRC B",
+                opcode:     0x08,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.b & 0x01 == 0x01;
+                    cpu.b = cpu.b >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.b |= 0x80;
+                    }
+                    if cpu.b == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x09    =>  Instruction {
+                name:       "RRC C",
+                opcode:     0x09,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.c & 0x01 == 0x01;
+                    cpu.c = cpu.c >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.c |= 0x80;
+                    }
+                    if cpu.c == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x0A    =>  Instruction {
+                name:       "RRC D",
+                opcode:     0x0A,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x01 == 0x01;
+                    cpu.a = cpu.a >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.a |= 0x80;
+                    }
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x0B    =>  Instruction {
+                name:       "RRC E",
+                opcode:     0x08,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.e & 0x01 == 0x01;
+                    cpu.e = cpu.e >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.e |= 0x80;
+                    }
+                    if cpu.e == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x0C    =>  Instruction {
+                name:       "RRC H",
+                opcode:     0x0C,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.h & 0x01 == 0x01;
+                    cpu.h = cpu.h >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.h |= 0x80;
+                    }
+                    if cpu.h == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x0D    =>  Instruction {
+                name:       "RRC L",
+                opcode:     0x0D,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.l & 0x01 == 0x01;
+                    cpu.l = cpu.l >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.l |= 0x80;
+                    }
+                    if cpu.l == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x0E    =>  Instruction {
+                name:       "RRC (HL)",
+                opcode:     0x0E,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    let carry = cpu.mmu.read8(addr) & 0x01 == 0x01;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) >> 1);
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x80);
+                    }
+                    if cpu.mmu.read8(addr) == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            
+            0x0F    =>  Instruction {
+                name:       "RRC A",
+                opcode:     0x0F,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x01 == 0x01;
+                    cpu.a = cpu.a >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.a |= 0x80;
+                    }
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x10    =>  Instruction {
+                name:       "RL B",
+                opcode:     0x010,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.b & 0x80 == 0x80;
+                    cpu.b = cpu.b << 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.b |= 1;
+                    }
+                    if cpu.b == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x11    =>  Instruction {
+                name:       "RL C",
+                opcode:     0x011,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.c & 0x80 == 0x80;
+                    cpu.c = cpu.c << 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.c |= 1;
+                    }
+                    if cpu.c == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x12    =>  Instruction {
+                name:       "RL D",
+                opcode:     0x010,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.d & 0x80 == 0x80;
+                    cpu.d = cpu.d << 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.d |= 1;
+                    }
+                    if cpu.d == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x13    =>  Instruction {
+                name:       "RL E",
+                opcode:     0x013,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.e & 0x80 == 0x80;
+                    cpu.e = cpu.e << 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.e |= 1;
+                    }
+                    if cpu.e == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x14    =>  Instruction {
+                name:       "RL H",
+                opcode:     0x014,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.h & 0x80 == 0x80;
+                    cpu.h = cpu.h << 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.h |= 1;
+                    }
+                    if cpu.h == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x15    =>  Instruction {
+                name:       "RL L",
+                opcode:     0x015,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.l & 0x80 == 0x80;
+                    cpu.l = cpu.l << 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.l |= 1;
+                    }
+                    if cpu.l == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x16    =>  Instruction {
+                name:       "RL (HL)",
+                opcode:     0x016,
+                cycles:     8,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    let carry = cpu.mmu.read8(addr) & 0x80 == 0x80;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) << 1);
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 1);
+                    }
+                    if cpu.mmu.read8(addr) == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },            
+            0x17    =>  Instruction {
+                name:       "RL A",
+                opcode:     0x017,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x80 == 0x80;
+                    cpu.a = cpu.a << 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.a |= 1;
+                    }
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x18    =>  Instruction {
+                name:       "RR B",
+                opcode:     0x018,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.b & 0x01 == 0x01;
+                    cpu.b = cpu.b >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.b |= 0x80;
+                    }
+                    if cpu.b == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x19    =>  Instruction {
+                name:       "RR C",
+                opcode:     0x019,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.c & 0x01 == 0x01;
+                    cpu.c = cpu.c >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.c |= 0x80;
+                    }
+                    if cpu.c == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x1A    =>  Instruction {
+                name:       "RR D",
+                opcode:     0x01A,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.d & 0x01 == 0x01;
+                    cpu.d = cpu.d >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.d |= 0x80;
+                    }
+                    if cpu.d == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x1B    =>  Instruction {
+                name:       "RR E",
+                opcode:     0x01B,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.e & 0x01 == 0x01;
+                    cpu.e = cpu.e >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.e |= 0x80;
+                    }
+                    if cpu.e == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x1C    =>  Instruction {
+                name:       "RR H",
+                opcode:     0x01C,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.h & 0x01 == 0x01;
+                    cpu.h = cpu.h >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.h |= 0x80;
+                    }
+                    if cpu.h == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x1D    =>  Instruction {
+                name:       "RR L",
+                opcode:     0x01D,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.l & 0x01 == 0x01;
+                    cpu.l = cpu.l >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.l |= 0x80;
+                    }
+                    if cpu.l == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x1E    =>  Instruction {
+                name:       "RR (HL)",
+                opcode:     0x01E,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    let carry = cpu.mmu.read8(addr) & 0x01 == 0x01;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) >> 1);
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x80);
+                    }
+                    if cpu.mmu.read8(addr) == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+
+            0x1F    =>  Instruction {
+                name:       "RR A",
+                opcode:     0x01F,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x01 == 0x01;
+                    cpu.a = cpu.a >> 1;
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.a |= 0x80;
+                    }
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x20    =>  Instruction {
+                name:       "SLA B",
+                opcode:     0x20,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.b & 0x80 == 0x80;
+                    cpu.b = cpu.b << 1;
+                    if cpu.b == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x21    =>  Instruction {
+                name:       "SLA C",
+                opcode:     0x21,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.c & 0x80 == 0x80;
+                    cpu.c = cpu.c << 1;
+                    if cpu.c == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x22    =>  Instruction {
+                name:       "SLA D",
+                opcode:     0x22,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.d & 0x80 == 0x80;
+                    cpu.d = cpu.d << 1;
+                    if cpu.d == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x23    =>  Instruction {
+                name:       "SLA E",
+                opcode:     0x23,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.e & 0x80 == 0x80;
+                    cpu.e = cpu.e << 1;
+                    if cpu.e == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x24    =>  Instruction {
+                name:       "SLA H",
+                opcode:     0x24,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.h & 0x80 == 0x80;
+                    cpu.h = cpu.h << 1;
+                    if cpu.h == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x25    =>  Instruction {
+                name:       "SLA L",
+                opcode:     0x25,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.l & 0x80 == 0x80;
+                    cpu.l = cpu.l << 1;
+                    if cpu.l == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x26    =>  Instruction {
+                name:       "SLA (HL)",
+                opcode:     0x26,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    let carry = cpu.mmu.read8(addr) & 0x80 == 0x80;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) << 1);
+                    if cpu.mmu.read8(addr) == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x27    =>  Instruction {
+                name:       "SLA A",
+                opcode:     0x27,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x80 == 0x80;
+                    cpu.a = cpu.a << 1;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x28    =>  Instruction {
+                name:       "SRA B",
+                opcode:     0x28,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.b & 0x01 == 0x01;
+                    cpu.b = cpu.b >> 1 | cpu.b & 0x80;
+                    if cpu.b == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x29    =>  Instruction {
+                name:       "SRA C",
+                opcode:     0x29,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.c & 0x01 == 0x01;
+                    cpu.c = cpu.c >> 1 | cpu.c & 0x80;
+                    if cpu.c == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x2A    =>  Instruction {
+                name:       "SRA D",
+                opcode:     0x2A,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.d & 0x01 == 0x01;
+                    cpu.d = cpu.d >> 1 | cpu.d & 0x80;
+                    if cpu.d == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x2B    =>  Instruction {
+                name:       "SRA E",
+                opcode:     0x2B,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.e & 0x01 == 0x01;
+                    cpu.e = cpu.e >> 1 | cpu.e & 0x80;
+                    if cpu.e == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x2C    =>  Instruction {
+                name:       "SRA H",
+                opcode:     0x2C,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.h & 0x01 == 0x01;
+                    cpu.h = cpu.h >> 1 | cpu.h & 0x80;
+                    if cpu.h == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x2D    =>  Instruction {
+                name:       "SRA L",
+                opcode:     0x2D,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.l & 0x01 == 0x01;
+                    cpu.l = cpu.l >> 1 | cpu.l & 0x80;
+                    if cpu.l == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x2E    =>  Instruction {
+                name:       "SRA (HL)",
+                opcode:     0x2E,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    let carry = cpu.mmu.read8(addr) & 0x01 == 0x01;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) >> 1);
+                    if cpu.mmu.read8(addr) == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x2F    =>  Instruction {
+                name:       "SRA A",
+                opcode:     0x2F,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x01 == 0x01;
+                    cpu.a = cpu.a >> 1;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
             0x30    =>  Instruction {
                 name:       "SWAP B",
                 opcode:     0x30,
@@ -3554,6 +4782,184 @@ impl Cpu {
                     cpu.f.remove(Flags::N);
                     cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            
+            0x38    =>  Instruction {
+                name:       "SRL B",
+                opcode:     0x38,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.b & 0x01 == 0x01;
+                    cpu.b = cpu.b >> 1;
+                    if cpu.b == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x39    =>  Instruction {
+                name:       "SRL C",
+                opcode:     0x39,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.c & 0x01 == 0x01;
+                    cpu.c = cpu.c >> 1;
+                    if cpu.c == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x3A    =>  Instruction {
+                name:       "SRL D",
+                opcode:     0x3A,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.d & 0x01 == 0x01;
+                    cpu.d = cpu.d >> 1;
+                    if cpu.d == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x3B    =>  Instruction {
+                name:       "SRL E",
+                opcode:     0x3B,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.e & 0x01 == 0x01;
+                    cpu.e = cpu.e >> 1;
+                    if cpu.e == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x3C    =>  Instruction {
+                name:       "SRL H",
+                opcode:     0x3C,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.h & 0x01 == 0x01;
+                    cpu.h = cpu.h >> 1;
+                    if cpu.h == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x3D    =>  Instruction {
+                name:       "SRL L",
+                opcode:     0x3D,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.l & 0x01 == 0x01;
+                    cpu.l = cpu.l >> 1;
+                    if cpu.l == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x3E    =>  Instruction {
+                name:       "SRL (HL)",
+                opcode:     0x3E,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    let carry = cpu.mmu.read8(addr) & 0x01 == 0x01;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) >> 1);
+                    if cpu.mmu.read8(addr) == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x3F    =>  Instruction {
+                name:       "SRL A",
+                opcode:     0x2F,
+                cycles:     8,
+                operation:  |cpu| {
+                    let carry = cpu.a & 0x01 == 0x01;
+                    cpu.a = cpu.a >> 1;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    if carry {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
                     Ok(())
                 },
             },
@@ -3973,4 +5379,143 @@ fn test_decnn() {
     cpu.tick();
 
     assert_eq!(cpu.read_bc(), 0xFFEF);
+}
+
+#[test]
+fn test_rlca() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x07;      // RLCA
+    cpu.a = 0b1001_1001;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a.rotate_shift(1)
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0b0011_0011);
+}
+
+#[test]
+fn test_rla() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x17;      // RLA
+    cpu.a = 0b1001_1001;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a.rotate_shift(1)
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0b0011_0010);
+}
+
+#[test]
+fn test_rrca() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x0F;      // RRCA
+    cpu.a = 0b1001_1001;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a.rotate_right(1)
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0b1100_1100);
+}
+
+#[test]
+fn test_rra() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x1F;      // RRA
+    cpu.a = 0b1001_1001;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a.rotate_right(1)
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0b0100_1100);
+}
+
+#[test]
+fn test_rlcb() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x00;      // RLC B
+    cpu.b = 0b1001_1001;
+    
+    cpu.mmu.write8(0x00, 0xCB);
+    cpu.mmu.write8(0x01, opcode);   // b = b.rotate_left(1)
+    cpu.tick();
+
+    assert_eq!(cpu.b, 0b0011_0011);
+}
+
+#[test]
+fn test_rlb() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x10;      // RL B
+    cpu.b = 0b1001_1001;
+    
+    cpu.mmu.write8(0x00, 0xCB);
+    cpu.mmu.write8(0x01, opcode);   // b = b.rotate_left(1)
+    cpu.tick();
+
+    assert_eq!(cpu.b, 0b0011_0010);
+}
+
+#[test]
+fn test_rrc() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x08;      // RRC B
+    cpu.b = 0b1001_1001;
+    
+    cpu.mmu.write8(0x00, 0xCB);
+    cpu.mmu.write8(0x01, opcode);   // b = b.rotate_right(1)
+    cpu.tick();
+
+    assert_eq!(cpu.b, 0b0100_1100);
+}
+
+#[test]
+fn test_rrn() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x18;      // RR B
+    cpu.b = 0b1001_1001;
+    
+    cpu.mmu.write8(0x00, 0xCB);
+    cpu.mmu.write8(0x01, opcode);   // b = b.rotate_right(1)
+    cpu.tick();
+
+    assert_eq!(cpu.b, 0b0100_1100);
+}
+
+#[test]
+fn test_slan() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x18;      // SLA B
+    cpu.b = 0b1001_1001;
+    
+    cpu.mmu.write8(0x00, 0xCB);
+    cpu.mmu.write8(0x01, opcode);   // b = b << 1
+    cpu.tick();
+
+    assert_eq!(cpu.b, 0b0100_1100);
+}
+
+#[test]
+fn test_sran() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x28;      // SRA B
+    cpu.b = 0b1001_1001;
+    
+    cpu.mmu.write8(0x00, 0xCB);
+    cpu.mmu.write8(0x01, opcode);   // b = b >> 1
+    cpu.tick();
+
+    assert_eq!(cpu.b, 0b1100_1100);
+}
+
+#[test]
+fn test_srln() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x38;      // SRL B
+    cpu.b = 0b1001_1001;
+    
+    cpu.mmu.write8(0x00, 0xCB);
+    cpu.mmu.write8(0x01, opcode);   // b = b >> 1
+    cpu.tick();
+
+    assert_eq!(cpu.b, 0b0100_1100);
 }
