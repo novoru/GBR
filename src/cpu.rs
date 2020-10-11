@@ -880,6 +880,449 @@ impl Cpu {
                     Ok(())
                 },
             },
+            
+            0x80    =>  Instruction {
+                name:       "ADD A, B",
+                opcode:     0x80,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.b;
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x81    =>  Instruction {
+                name:       "ADD A, C",
+                opcode:     0x81,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.c;
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x82    =>  Instruction {
+                name:       "ADD A, D",
+                opcode:     0x82,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.d;
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x83    =>  Instruction {
+                name:       "ADD A, E",
+                opcode:     0x83,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.e;
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x84    =>  Instruction {
+                name:       "ADD A, H",
+                opcode:     0x84,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.h;
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x85    =>  Instruction {
+                name:       "ADD A, L",
+                opcode:     0x85,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.l;
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x86    =>  Instruction {
+                name:       "ADD A, (HL)",
+                opcode:     0x86,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+
+            0x87    =>  Instruction {
+                name:       "ADD A, A",
+                opcode:     0x87,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.a;
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x88    =>  Instruction {
+                name:       "ADC A, B",
+                opcode:     0x88,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.b.wrapping_add(c);
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x89    =>  Instruction {
+                name:       "ADC A, C",
+                opcode:     0x8F,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.c.wrapping_add(c);
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x8A    =>  Instruction {
+                name:       "ADC A, D",
+                opcode:     0x8A,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.d.wrapping_add(c);
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x8B    =>  Instruction {
+                name:       "ADC A, E",
+                opcode:     0x8B,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.e.wrapping_add(c);
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x8C    =>  Instruction {
+                name:       "ADC A, H",
+                opcode:     0x8C,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.h.wrapping_add(c);
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x8D    =>  Instruction {
+                name:       "ADC A, L",
+                opcode:     0x8D,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.l.wrapping_add(c);
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0x8E    =>  Instruction {
+                name:       "ADC A, (HL)",
+                opcode:     0x8E,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.mmu.read8(cpu.read_hl() as usize).wrapping_add(c);
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+
+            0x8F    =>  Instruction {
+                name:       "ADC A, A",
+                opcode:     0x8F,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.a.wrapping_add(c);
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
 
             0xC1    =>  Instruction {
                 name:       "POP BC",
@@ -899,6 +1342,62 @@ impl Cpu {
                 operation:  |cpu| {
                     cpu.push(cpu.b);
                     cpu.push(cpu.c);
+                    Ok(())
+                },
+            },
+            0xC6    =>  Instruction {
+                name:       "ADD A, #",
+                opcode:     0xC6,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.fetch();
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            
+            0xCE    =>  Instruction {
+                name:       "ADC A, #",
+                opcode:     0xCE,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let c = (cpu.f & Flags::C == Flags::C) as u8;
+                    let n = cpu.fetch().wrapping_add(c);
+                    cpu.a = a.wrapping_add(n);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (a & n & 0x08) == 0x08 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if (a & n & 0x80) == 0x80 {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
                     Ok(())
                 },
             },
@@ -1090,6 +1589,8 @@ impl fmt::Display for Instruction {
     }
 }
 
+// tests
+
 #[test]
 fn test_ldbn() {    
     let mut cpu = Cpu::new();
@@ -1173,4 +1674,93 @@ fn test_ldhl_sp_n() {
     assert_eq!(cpu.l, 0x2A);
     assert_eq!(cpu.decode(opcode).to_string(), 
             "Instruction { name=\'LDHL SP, n\', cycles=12, opcode=0xf8 }")
+}
+
+#[test]
+fn test_addan() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x80;      // ADD A, B
+    cpu.a = 32;
+    cpu.b = 10;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a + b
+    cpu.tick();
+
+    assert_eq!(cpu.a, 42);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
+
+    cpu.pc = 0;
+    cpu.a = 0x08;
+    cpu.b = 0x08;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a + b
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0x10);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, true);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
+    
+    cpu.pc = 0;
+    cpu.a = 0x80;
+    cpu.b = 0x80;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a + b
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, true);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, true);
+}
+
+#[test]
+fn test_adcan() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x88;      // ADC A, B
+    cpu.a = 32;
+    cpu.b = 9;
+    cpu.f.insert(Flags::C);
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a + b + carry flag
+    cpu.tick();
+
+    assert_eq!(cpu.a, 42);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
+
+    cpu.pc = 0;
+    cpu.a = 0x08;
+    cpu.b = 0x07;
+    cpu.f.insert(Flags::C);
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a + b + carry flag
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0x10);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, true);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
+    
+    cpu.pc = 0;
+    cpu.a = 0x80;
+    cpu.b = 0x7F;
+    cpu.f.insert(Flags::C);
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a + b + carry flag
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, true);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, true);
 }
