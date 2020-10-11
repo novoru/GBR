@@ -151,6 +151,48 @@ impl Cpu {
                 },
             },
 
+            0x04    =>  Instruction {
+                name:       "INC B",
+                opcode:     0x04,
+                cycles:     4,
+                operation:  |cpu| {
+                    let b = cpu.b;
+                    cpu.b = b.wrapping_add(1);
+                    if cpu.b == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.b^b^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
+            0x05    =>  Instruction {
+                name:       "DEC B",
+                opcode:     0x05,
+                cycles:     4,
+                operation:  |cpu| {
+                    let b = cpu.b;
+                    cpu.b = b.wrapping_sub(1);
+                    if cpu.b == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.b^b^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
             0x06    =>  Instruction {
                 name:       "LD B, n",
                 opcode:     0x06,
@@ -183,6 +225,48 @@ impl Cpu {
                 },
             },
 
+            0x0C    =>  Instruction {
+                name:       "INC C",
+                opcode:     0x0C,
+                cycles:     4,
+                operation:  |cpu| {
+                    let c = cpu.c;
+                    cpu.c = c.wrapping_add(1);
+                    if cpu.c == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.c^c^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
+            0x0D    =>  Instruction {
+                name:       "DEC C",
+                opcode:     0x0D,
+                cycles:     4,
+                operation:  |cpu| {
+                    let c = cpu.c;
+                    cpu.c = c.wrapping_sub(1);
+                    if cpu.c == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.c^c^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
             0x0E    =>  Instruction {
                 name:       "LD C, n",
                 opcode:     0x0E,
@@ -214,7 +298,49 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            
+            0x14    =>  Instruction {
+                name:       "INC D",
+                opcode:     0x14,
+                cycles:     4,
+                operation:  |cpu| {
+                    let d = cpu.d;
+                    cpu.d = d.wrapping_add(1);
+                    if cpu.d == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.d^d^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
+            0x15    =>  Instruction {
+                name:       "DEC D",
+                opcode:     0x15,
+                cycles:     4,
+                operation:  |cpu| {
+                    let d = cpu.d;
+                    cpu.d = d.wrapping_sub(1);
+                    if cpu.d == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.d^d^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
             0x16    =>  Instruction {
                 name:       "LD D, n",
                 opcode:     0x16,
@@ -236,6 +362,48 @@ impl Cpu {
                 },
             },
 
+            0x1C    =>  Instruction {
+                name:       "INC E",
+                opcode:     0x1C,
+                cycles:     4,
+                operation:  |cpu| {
+                    let e = cpu.e;
+                    cpu.e = e.wrapping_add(1);
+                    if cpu.e == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.e^e^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
+            0x1D    =>  Instruction {
+                name:       "DEC E",
+                opcode:     0x1D,
+                cycles:     4,
+                operation:  |cpu| {
+                    let e = cpu.e;
+                    cpu.e = e.wrapping_sub(1);
+                    if cpu.e == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.e^e^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
             0x1E    =>  Instruction {
                 name:       "LD E, n",
                 opcode:     0x1E,
@@ -268,7 +436,49 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            
+            0x24    =>  Instruction {
+                name:       "INC H",
+                opcode:     0x24,
+                cycles:     4,
+                operation:  |cpu| {
+                    let h = cpu.h;
+                    cpu.h = h.wrapping_add(1);
+                    if cpu.h == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.h^h^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
+            0x25    =>  Instruction {
+                name:       "DEC H",
+                opcode:     0x25,
+                cycles:     4,
+                operation:  |cpu| {
+                    let h = cpu.h;
+                    cpu.h = h.wrapping_sub(1);
+                    if cpu.h == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.h^h^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
             0x26    =>  Instruction {
                 name:       "LD H, n",
                 opcode:     0x26,
@@ -292,6 +502,48 @@ impl Cpu {
                 },
             },
             
+            0x2C    =>  Instruction {
+                name:       "INC L",
+                opcode:     0x2C,
+                cycles:     4,
+                operation:  |cpu| {
+                    let l = cpu.l;
+                    cpu.l = l.wrapping_add(1);
+                    if cpu.l == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.l^l^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
+            0x2D    =>  Instruction {
+                name:       "DEC L",
+                opcode:     0x2D,
+                cycles:     4,
+                operation:  |cpu| {
+                    let l = cpu.l;
+                    cpu.l = l.wrapping_sub(1);
+                    if cpu.l == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.l^l^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },            
             0x2E    =>  Instruction {
                 name:       "LD L, n",
                 opcode:     0x2E,
@@ -324,7 +576,51 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            
+            0x34    =>  Instruction {
+                name:       "INC (HL)",
+                opcode:     0x34,
+                cycles:     12,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    let n = cpu.mmu.read8(addr);
+                    cpu.mmu.write8(addr, n.wrapping_add(1));
+                    if cpu.mmu.read8(addr) == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.mmu.read8(addr)^n^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
+            0x35    =>  Instruction {
+                name:       "DEC (HL)",
+                opcode:     0x35,
+                cycles:     12,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    let n = cpu.mmu.read8(addr);
+                    cpu.mmu.write8(addr, n.wrapping_sub(1));
+                    if cpu.b == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.mmu.read8(addr)^n^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
             0x36    =>  Instruction {
                 name:       "LD (HL), n",
                 opcode:     0x36,
@@ -347,7 +643,49 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            
+            0x3C    =>  Instruction {
+                name:       "INC A",
+                opcode:     0x3C,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    cpu.a = a.wrapping_add(1);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.a^a^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
+            0x3D    =>  Instruction {
+                name:       "DEC A",
+                opcode:     0x3D,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    cpu.a = a.wrapping_sub(1);
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    if (cpu.a^a^1)&0x10 == 0x10 {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    Ok(())
+                },
+            },
             0x3E    =>  Instruction {
                 name:       "LD A, #",
                 opcode:     0x3E,
@@ -895,12 +1233,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -922,12 +1260,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -949,12 +1287,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -976,12 +1314,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < n {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1003,12 +1341,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1030,12 +1368,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1057,12 +1395,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1085,12 +1423,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1113,12 +1451,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1141,12 +1479,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1169,12 +1507,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1197,12 +1535,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1225,12 +1563,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1253,12 +1591,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1281,12 +1619,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1310,12 +1648,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1765,6 +2103,637 @@ impl Cpu {
                     Ok(())
                 },
             },
+            0xA0    =>  Instruction {
+                name:       "AND A, B",
+                opcode:     0xA0,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.b;
+                    cpu.a = a & n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xA1    =>  Instruction {
+                name:       "AND A, C",
+                opcode:     0xA1,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.c;
+                    cpu.a = a & n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xA2    =>  Instruction {
+                name:       "AND A, D",
+                opcode:     0xA2,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.d;
+                    cpu.a = a & n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xA3    =>  Instruction {
+                name:       "AND A, E",
+                opcode:     0xA3,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.e;
+                    cpu.a = a & n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xA4    =>  Instruction {
+                name:       "AND A, H",
+                opcode:     0xA4,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.h;
+                    cpu.a = a & n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xA5    =>  Instruction {
+                name:       "AND A, L",
+                opcode:     0xA5,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.l;
+                    cpu.a = a & n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xA6    =>  Instruction {
+                name:       "AND A, (HL)",
+                opcode:     0xA6,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.a = a & n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            
+            0xA8    =>  Instruction {
+                name:       "XOR A, B",
+                opcode:     0xA8,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.b;
+                    cpu.a = a ^ n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xA9    =>  Instruction {
+                name:       "XOR A, C",
+                opcode:     0xA9,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.c;
+                    cpu.a = a ^ n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xAA    =>  Instruction {
+                name:       "XOR A, D",
+                opcode:     0xAA,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.d;
+                    cpu.a = a ^ n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xAB    =>  Instruction {
+                name:       "XOR A, E",
+                opcode:     0xAB,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.e;
+                    cpu.a = a ^ n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xAC    =>  Instruction {
+                name:       "XOR A, H",
+                opcode:     0xAC,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.h;
+                    cpu.a = a ^ n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xAD    =>  Instruction {
+                name:       "XOR A, L",
+                opcode:     0xAD,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.l;
+                    cpu.a = a ^ n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xAE    =>  Instruction {
+                name:       "XOR A, (HL)",
+                opcode:     0xAE,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.a = a ^ n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            
+            0xB0    =>  Instruction {
+                name:       "OR A, B",
+                opcode:     0xB0,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.b;
+                    cpu.a = a | n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xB1    =>  Instruction {
+                name:       "OR A, C",
+                opcode:     0xB1,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.c;
+                    cpu.a = a | n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xB2    =>  Instruction {
+                name:       "OR A, D",
+                opcode:     0xB2,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.d;
+                    cpu.a = a | n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xB3    =>  Instruction {
+                name:       "OR A, E",
+                opcode:     0xB3,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.e;
+                    cpu.a = a | n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xB4    =>  Instruction {
+                name:       "OR A, H",
+                opcode:     0xB4,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.h;
+                    cpu.a = a | n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xB5    =>  Instruction {
+                name:       "OR A, L",
+                opcode:     0xB5,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.l;
+                    cpu.a = a | n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            0xB6    =>  Instruction {
+                name:       "OR A, (HL)",
+                opcode:     0xB6,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.a = a | n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
+            
+            0xB8    =>  Instruction {
+                name:       "CP A, B",
+                opcode:     0xB8,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.b;
+                    if  a == n {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0xB9    =>  Instruction {
+                name:       "CP A, C",
+                opcode:     0xB9,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.c;
+                    if  a == n {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0xBA    =>  Instruction {
+                name:       "CP A, D",
+                opcode:     0xBA,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.d;
+                    if  a == n {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0xBB    =>  Instruction {
+                name:       "CP A, E",
+                opcode:     0xBB,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.e;
+                    if  a == n {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0xBC    =>  Instruction {
+                name:       "CP A, H",
+                opcode:     0xBC,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.h;
+                    if  a == n {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0xBD    =>  Instruction {
+                name:       "CP A, L",
+                opcode:     0xBD,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.l;
+                    if  a == n {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            0xBE    =>  Instruction {
+                name:       "CP A, (HL)",
+                opcode:     0xBE,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    if  a == n {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+            
+            0xBF    =>  Instruction {
+                name:       "CP A, A",
+                opcode:     0xBF,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.a;
+                    if  a == n {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
+                    Ok(())
+                },
+            },
+
+            0xA7    =>  Instruction {
+                name:       "AND A, A",
+                opcode:     0xA7,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.a;
+                    cpu.a = a & n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
 
             0xC1    =>  Instruction {
                 name:       "POP BC",
@@ -1801,12 +2770,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1830,12 +2799,12 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (a & n & 0x08) == 0x08 {
+                    if (cpu.a^a^n)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if (a & n & 0x80) == 0x80 {
+                    if cpu.a < a {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1965,6 +2934,25 @@ impl Cpu {
                     Ok(())
                 },
             },
+            0xE6    =>  Instruction {
+                name:       "AND A, #",
+                opcode:     0xE6,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.fetch();
+                    cpu.a = a & n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
 
             0xEA    =>  Instruction {
                 name:       "LD (nn), A",
@@ -1973,6 +2961,26 @@ impl Cpu {
                 operation:  |cpu| {
                     let addr = cpu.fetch16() as usize;
                     cpu.mmu.write8(addr, cpu.a);
+                    Ok(())
+                },
+            },
+            
+            0xEE    =>  Instruction {
+                name:       "XOR A, #",
+                opcode:     0xEE,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.fetch();
+                    cpu.a = a ^ n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
                     Ok(())
                 },
             },
@@ -2020,7 +3028,25 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0xF6    =>  Instruction {
+                name:       "OR A, #",
+                opcode:     0xB6,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.fetch();
+                    cpu.a = a | n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },
             0xF8    =>  Instruction {
                 name:       "LDHL SP, n",
                 opcode:     0xF8,
@@ -2060,6 +3086,33 @@ impl Cpu {
                 operation:  |cpu| {
                     let addr = cpu.fetch16() as usize;
                     cpu.a = cpu.mmu.read8(addr);
+                    Ok(())
+                },
+            },
+
+            0xFE    =>  Instruction {
+                name:       "CP A, #",
+                opcode:     0xFE,
+                cycles:     8,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.fetch();
+                    if  a == n {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.insert(Flags::N);
+                    if a&0x0F < n&0x0F {
+                        cpu.f.insert(Flags::H);
+                    } else {
+                        cpu.f.remove(Flags::H);
+                    }
+                    if a < n {
+                        cpu.f.insert(Flags::C);
+                    } else {
+                        cpu.f.remove(Flags::C);
+                    }
                     Ok(())
                 },
             },
@@ -2350,4 +3403,84 @@ fn test_sbcan() {
     assert_eq!((cpu.f & Flags::N) == Flags::N, true);
     assert_eq!((cpu.f & Flags::H) == Flags::H, false);
     assert_eq!((cpu.f & Flags::C) == Flags::C, true);
+}
+
+#[test]
+fn test_and() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xA0;      // AND A, B
+    cpu.a = 0b1111_1010;
+    cpu.b = 0b0000_1111;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a & b
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0b0000_1010);
+}
+
+#[test]
+fn test_or() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xB0;      // OR A, B
+    cpu.a = 0b1011_0000;
+    cpu.b = 0b0000_1101;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a | b
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0b1011_1101);
+}
+
+#[test]
+fn test_xor() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xA8;      // XOR A, B
+    cpu.a = 0b1010_0000;
+    cpu.b = 0b0000_0011;
+    
+    cpu.mmu.write8(0x00, opcode);   // a = a ^ b
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0b1010_0011);
+}
+
+#[test]
+fn test_cp() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xB8;      // CP A, B
+    cpu.a = 0b0000_1111;
+    cpu.b = 0b0000_1111;
+    
+    cpu.mmu.write8(0x00, opcode);   // a == b
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0b0000_1111);
+    assert_eq!((cpu.f & Flags::Z) == Flags::Z, true);
+    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
+    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
+    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
+}
+
+#[test]
+fn test_inc() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x3C;      // INC A
+    cpu.a = 0;
+    
+    cpu.mmu.write8(0x00, opcode);   // a += 1
+    cpu.tick();
+
+    assert_eq!(cpu.a, 1);
+}
+
+#[test]
+fn test_dec() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x3D;      // DEC A
+    cpu.a = 0;
+    
+    cpu.mmu.write8(0x00, opcode);   // a += 1
+    cpu.tick();
+
+    assert_eq!(cpu.a, 0xFF);
 }
