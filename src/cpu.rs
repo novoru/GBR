@@ -4782,7 +4782,25 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0x37    =>  Instruction {
+                name:       "SWAP A",
+                opcode:     0x37,
+                cycles:     8,
+                operation:  |cpu| {
+                    let hi = cpu.a & 0xF0;
+                    let lo = cpu.a & 0x0F;
+                    cpu.a = hi | lo;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.remove(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },            
             0x38    =>  Instruction {
                 name:       "SRL B",
                 opcode:     0x38,
@@ -7088,7 +7106,6 @@ impl Cpu {
                     Ok(())
                 },
             },
-            _       =>  unimplemented!("can't decode: 0x{:02x}", opcode),
         }
     }
 
