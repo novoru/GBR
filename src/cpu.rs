@@ -3250,7 +3250,6 @@ impl Cpu {
                     Ok(())
                 },
             },
-
             0xE1    =>  Instruction {
                 name:       "POP HL",
                 opcode:     0xE1,
@@ -3261,7 +3260,6 @@ impl Cpu {
                     Ok(())
                 },
             },
-
             0xE2    =>  Instruction {
                 name:       "LD (C), A",
                 opcode:     0xE2,
@@ -3368,8 +3366,7 @@ impl Cpu {
                     cpu.a = cpu.mmu.read8(addr);
                     Ok(())
                 },
-            },
-            
+            },            
             0xF1    =>  Instruction {
                 name:       "POP AF",
                 opcode:     0xF1,
@@ -3380,7 +3377,6 @@ impl Cpu {
                     Ok(())
                 },
             },
-
             0xF2    =>  Instruction {
                 name:       "LD A, (C)",
                 opcode:     0xF2,
@@ -3430,6 +3426,7 @@ impl Cpu {
                     Ok(())
                 },
             },
+
             0xF8    =>  Instruction {
                 name:       "LDHL SP, n",
                 opcode:     0xF8,
@@ -4963,6 +4960,2134 @@ impl Cpu {
                     Ok(())
                 },
             },
+            0x40    =>  Instruction {
+                name:       "BIT 0, B",
+                opcode:     0x40,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.b & 0x01 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x41    =>  Instruction {
+                name:       "BIT 0, C",
+                opcode:     0x41,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.c & 0x01 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x42    =>  Instruction {
+                name:       "BIT 0, D",
+                opcode:     0x42,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.d & 0x01 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x43    =>  Instruction {
+                name:       "BIT 0, E",
+                opcode:     0x43,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.e & 0x01 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x44    =>  Instruction {
+                name:       "BIT 0, H",
+                opcode:     0x44,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.h & 0x01 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x45    =>  Instruction {
+                name:       "BIT 0, L",
+                opcode:     0x45,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.l & 0x01 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x46    =>  Instruction {
+                name:       "BIT 0, (HL)",
+                opcode:     0x46,
+                cycles:     16,
+                operation:  |cpu| {
+                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x01 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x47    =>  Instruction {
+                name:       "BIT 0, A",
+                opcode:     0x47,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.a & 0x01 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x48    =>  Instruction {
+                name:       "BIT 1, B",
+                opcode:     0x48,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.b & 0x02 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x49    =>  Instruction {
+                name:       "BIT 1, C",
+                opcode:     0x49,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.c & 0x02 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x4A    =>  Instruction {
+                name:       "BIT 1, D",
+                opcode:     0x4A,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.d & 0x02 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x4B    =>  Instruction {
+                name:       "BIT 1, E",
+                opcode:     0x4B,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.e & 0x02 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x4C    =>  Instruction {
+                name:       "BIT 1, H",
+                opcode:     0x4C,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.h & 0x02 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x4D    =>  Instruction {
+                name:       "BIT 1, L",
+                opcode:     0x4D,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.l & 0x02 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x4E    =>  Instruction {
+                name:       "BIT 1, (HL)",
+                opcode:     0x4E,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x02 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x4F    =>  Instruction {
+                name:       "BIT 1, A",
+                opcode:     0x4F,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.a & 0x02 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x50    =>  Instruction {
+                name:       "BIT 2, B",
+                opcode:     0x50,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.b & 0x04 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x51    =>  Instruction {
+                name:       "BIT 2, C",
+                opcode:     0x51,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.c & 0x04 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x52    =>  Instruction {
+                name:       "BIT 2, D",
+                opcode:     0x52,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.d & 0x04 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x53    =>  Instruction {
+                name:       "BIT 2, E",
+                opcode:     0x53,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.e & 0x04 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x54    =>  Instruction {
+                name:       "BIT 2, H",
+                opcode:     0x54,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.h & 0x04 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x55    =>  Instruction {
+                name:       "BIT 2, L",
+                opcode:     0x55,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.l & 0x04 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x56    =>  Instruction {
+                name:       "BIT 2, (HL)",
+                opcode:     0x56,
+                cycles:     16,
+                operation:  |cpu| {
+                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x04 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x57    =>  Instruction {
+                name:       "BIT 2, A",
+                opcode:     0x57,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.a & 0x04 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x58    =>  Instruction {
+                name:       "BIT 3, B",
+                opcode:     0x58,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.b & 0x08 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x59    =>  Instruction {
+                name:       "BIT 3, C",
+                opcode:     0x59,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.c & 0x08 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x5A    =>  Instruction {
+                name:       "BIT 3, D",
+                opcode:     0x5A,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.d & 0x08 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x5B    =>  Instruction {
+                name:       "BIT 3, E",
+                opcode:     0x5B,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.e & 0x08 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x5C    =>  Instruction {
+                name:       "BIT 3, H",
+                opcode:     0x5C,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.h & 0x08 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x5D    =>  Instruction {
+                name:       "BIT 3, L",
+                opcode:     0x5D,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.l & 0x08 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x5E    =>  Instruction {
+                name:       "BIT 3, (HL)",
+                opcode:     0x5E,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x08 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x5F    =>  Instruction {
+                name:       "BIT 3, A",
+                opcode:     0x5F,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.a & 0x08 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x60    =>  Instruction {
+                name:       "BIT 4, B",
+                opcode:     0x60,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.b & 0x10 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x61    =>  Instruction {
+                name:       "BIT 4, C",
+                opcode:     0x61,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.c & 0x10 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x62    =>  Instruction {
+                name:       "BIT 4, D",
+                opcode:     0x62,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.d & 0x10 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x63    =>  Instruction {
+                name:       "BIT 4, E",
+                opcode:     0x63,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.e & 0x10 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x64    =>  Instruction {
+                name:       "BIT 4, H",
+                opcode:     0x64,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.h & 0x10 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x65    =>  Instruction {
+                name:       "BIT 4, L",
+                opcode:     0x65,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.l & 0x10 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x66    =>  Instruction {
+                name:       "BIT 4, (HL)",
+                opcode:     0x66,
+                cycles:     16,
+                operation:  |cpu| {
+                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x10 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x67    =>  Instruction {
+                name:       "BIT 4, A",
+                opcode:     0x67,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.a & 0x10 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x68    =>  Instruction {
+                name:       "BIT 5, B",
+                opcode:     0x68,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.b & 0x20 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x69    =>  Instruction {
+                name:       "BIT 5, C",
+                opcode:     0x69,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.c & 0x20 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x6A    =>  Instruction {
+                name:       "BIT 5, D",
+                opcode:     0x6A,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.d & 0x20 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x6B    =>  Instruction {
+                name:       "BIT 5, E",
+                opcode:     0x6B,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.e & 0x20 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x6C    =>  Instruction {
+                name:       "BIT 5, H",
+                opcode:     0x6C,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.h & 0x20 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x6D    =>  Instruction {
+                name:       "BIT 5, L",
+                opcode:     0x6D,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.l & 0x20 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x6E    =>  Instruction {
+                name:       "BIT 5, (HL)",
+                opcode:     0x6E,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x20 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x6F    =>  Instruction {
+                name:       "BIT 5, A",
+                opcode:     0x6F,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.a & 0x20 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x70    =>  Instruction {
+                name:       "BIT 6, B",
+                opcode:     0x70,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.b & 0x40 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x71    =>  Instruction {
+                name:       "BIT 6, C",
+                opcode:     0x71,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.c & 0x40 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x72    =>  Instruction {
+                name:       "BIT 6, D",
+                opcode:     0x72,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.d & 0x40 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x73    =>  Instruction {
+                name:       "BIT 6, E",
+                opcode:     0x73,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.e & 0x40 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x74    =>  Instruction {
+                name:       "BIT 6, H",
+                opcode:     0x74,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.h & 0x40 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x75    =>  Instruction {
+                name:       "BIT 6, L",
+                opcode:     0x75,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.l & 0x40 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x76    =>  Instruction {
+                name:       "BIT 6, (HL)",
+                opcode:     0x76,
+                cycles:     16,
+                operation:  |cpu| {
+                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x40 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x77    =>  Instruction {
+                name:       "BIT 6, A",
+                opcode:     0x77,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.a & 0x40 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x78    =>  Instruction {
+                name:       "BIT 7, B",
+                opcode:     0x78,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.b & 0x80 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x79    =>  Instruction {
+                name:       "BIT 7, C",
+                opcode:     0x79,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.c & 0x80 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x7A    =>  Instruction {
+                name:       "BIT 7, D",
+                opcode:     0x7A,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.d & 0x80 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x7B    =>  Instruction {
+                name:       "BIT 7, E",
+                opcode:     0x7B,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.e & 0x80 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x7C    =>  Instruction {
+                name:       "BIT 7, H",
+                opcode:     0x7C,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.h & 0x80 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x7D    =>  Instruction {
+                name:       "BIT 7, L",
+                opcode:     0x7D,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.l & 0x80 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x7E    =>  Instruction {
+                name:       "BIT 7, (HL)",
+                opcode:     0x7E,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x80 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x7F    =>  Instruction {
+                name:       "BIT 7, A",
+                opcode:     0x7F,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.a & 0x80 == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    Ok(())
+                },
+            },
+            0x80    =>  Instruction {
+                name:       "RES 0, B",
+                opcode:     0x80,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b &= !0x01;
+                    Ok(())
+                },
+            },
+            0x81    =>  Instruction {
+                name:       "RES 0, C",
+                opcode:     0x81,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c &= !0x01;
+                    Ok(())
+                },
+            },
+            0x82    =>  Instruction {
+                name:       "RES 0, D",
+                opcode:     0x82,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d &= !0x01;
+                    Ok(())
+                },
+            },
+            0x83    =>  Instruction {
+                name:       "RES 0, E",
+                opcode:     0x83,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e &= !0x01;
+                    Ok(())
+                },
+            },
+            0x84    =>  Instruction {
+                name:       "RES 0, H",
+                opcode:     0x84,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h &= !0x01;
+                    Ok(())
+                },
+            },
+            0x85    =>  Instruction {
+                name:       "RES 0, L",
+                opcode:     0x85,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l &= !0x01;
+                    Ok(())
+                },
+            },
+            0x86    =>  Instruction {
+                name:       "RES 0, (HL)",
+                opcode:     0x86,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x01);
+                    Ok(())
+                },
+            },
+            0x87    =>  Instruction {
+                name:       "RES 0, A",
+                opcode:     0x87,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a &= !0x01;
+                    Ok(())
+                },
+            },
+            0x88    =>  Instruction {
+                name:       "RES 1, B",
+                opcode:     0x88,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b &= !0x02;
+                    Ok(())
+                },
+            },
+            0x89    =>  Instruction {
+                name:       "RES 1, C",
+                opcode:     0x89,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c &= !0x02;
+                    Ok(())
+                },
+            },
+            0x8A    =>  Instruction {
+                name:       "RES 1, D",
+                opcode:     0x8A,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d &= !0x02;
+                    Ok(())
+                },
+            },
+            0x8B    =>  Instruction {
+                name:       "RES 1, E",
+                opcode:     0x8B,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e &= !0x02;
+                    Ok(())
+                },
+            },
+            0x8C    =>  Instruction {
+                name:       "RES 1, H",
+                opcode:     0x8C,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h &= !0x02;
+                    Ok(())
+                },
+            },
+            0x8D    =>  Instruction {
+                name:       "RES 1, L",
+                opcode:     0x8D,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l &= !0x02;
+                    Ok(())
+                },
+            },
+            0x8E    =>  Instruction {
+                name:       "RES 1, (HL)",
+                opcode:     0x8E,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x02);
+                    Ok(())
+                },
+            },
+            0x8F    =>  Instruction {
+                name:       "RES 1, A",
+                opcode:     0x8F,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a &= !0x02;
+                    Ok(())
+                },
+            },
+            0x90    =>  Instruction {
+                name:       "RES 2, B",
+                opcode:     0x90,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b &= !0x04;
+                    Ok(())
+                },
+            },
+            0x91    =>  Instruction {
+                name:       "RES 2, C",
+                opcode:     0x91,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c &= !0x04;
+                    Ok(())
+                },
+            },
+            0x92    =>  Instruction {
+                name:       "RES 2, D",
+                opcode:     0x92,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d &= !0x04;
+                    Ok(())
+                },
+            },
+            0x93    =>  Instruction {
+                name:       "RES 2, E",
+                opcode:     0x93,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e &= !0x04;
+                    Ok(())
+                },
+            },
+            0x94    =>  Instruction {
+                name:       "RES 2, H",
+                opcode:     0x94,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h &= !0x04;
+                    Ok(())
+                },
+            },
+            0x95    =>  Instruction {
+                name:       "RES 2, L",
+                opcode:     0x95,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l &= !0x04;
+                    Ok(())
+                },
+            },
+            0x96    =>  Instruction {
+                name:       "RES 2, (HL)",
+                opcode:     0x96,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x04);
+                    Ok(())
+                },
+            },
+            0x97    =>  Instruction {
+                name:       "RES 2, A",
+                opcode:     0x97,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a &= !0x04;
+                    Ok(())
+                },
+            },
+            0x98    =>  Instruction {
+                name:       "RES 3, B",
+                opcode:     0x98,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b &= !0x08;
+                    Ok(())
+                },
+            },
+            0x99    =>  Instruction {
+                name:       "RES 3, C",
+                opcode:     0x99,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c &= !0x08;
+                    Ok(())
+                },
+            },
+            0x9A    =>  Instruction {
+                name:       "RES 3, D",
+                opcode:     0x9A,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d &= !0x08;
+                    Ok(())
+                },
+            },
+            0x9B    =>  Instruction {
+                name:       "RES 3, E",
+                opcode:     0x9B,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e &= !0x08;
+                    Ok(())
+                },
+            },
+            0x9C    =>  Instruction {
+                name:       "RES 3, H",
+                opcode:     0x9C,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h &= !0x08;
+                    Ok(())
+                },
+            },
+            0x9D    =>  Instruction {
+                name:       "RES 3, L",
+                opcode:     0x9D,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l &= !0x08;
+                    Ok(())
+                },
+            },
+            0x9E    =>  Instruction {
+                name:       "RES 3, (HL)",
+                opcode:     0x9E,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x08);
+                    Ok(())
+                },
+            },
+            0x9F    =>  Instruction {
+                name:       "RES 3, A",
+                opcode:     0x9F,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a &= !0x08;
+                    Ok(())
+                },
+            },
+            0xA0    =>  Instruction {
+                name:       "RES 4, B",
+                opcode:     0xA0,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b &= !0x10;
+                    Ok(())
+                },
+            },
+            0xA1    =>  Instruction {
+                name:       "RES 4, C",
+                opcode:     0xA1,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c &= !0x10;
+                    Ok(())
+                },
+            },
+            0xA2    =>  Instruction {
+                name:       "RES 4, D",
+                opcode:     0xA2,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d &= !0x10;
+                    Ok(())
+                },
+            },
+            0xA3    =>  Instruction {
+                name:       "RES 4, E",
+                opcode:     0xA3,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e &= !0x10;
+                    Ok(())
+                },
+            },
+            0xA4    =>  Instruction {
+                name:       "RES 4, H",
+                opcode:     0xA4,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h &= !0x10;
+                    Ok(())
+                },
+            },
+            0xA5    =>  Instruction {
+                name:       "RES 4, L",
+                opcode:     0xA5,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l &= !0x10;
+                    Ok(())
+                },
+            },
+            0xA6    =>  Instruction {
+                name:       "RES 4, (HL)",
+                opcode:     0xA6,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x10);
+                    Ok(())
+                },
+            },
+            0xA7    =>  Instruction {
+                name:       "RES 4, A",
+                opcode:     0xA7,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a &= !0x10;
+                    Ok(())
+                },
+            },
+            0xA8    =>  Instruction {
+                name:       "RES 5, B",
+                opcode:     0xA8,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b &= !0x20;
+                    Ok(())
+                },
+            },
+            0xA9    =>  Instruction {
+                name:       "RES 5, C",
+                opcode:     0xA9,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c &= !0x20;
+                    Ok(())
+                },
+            },
+            0xAA    =>  Instruction {
+                name:       "RES 5, D",
+                opcode:     0xAA,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d &= !0x20;
+                    Ok(())
+                },
+            },
+            0xAB    =>  Instruction {
+                name:       "RES 5, E",
+                opcode:     0xAB,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e &= !0x20;
+                    Ok(())
+                },
+            },
+            0xAC    =>  Instruction {
+                name:       "RES 5, H",
+                opcode:     0xAC,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h &= !0x20;
+                    Ok(())
+                },
+            },
+            0xAD    =>  Instruction {
+                name:       "RES 5, L",
+                opcode:     0xAD,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l &= !0x20;
+                    Ok(())
+                },
+            },
+            0xAE    =>  Instruction {
+                name:       "RES 5, (HL)",
+                opcode:     0xAE,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x20);
+                    Ok(())
+                },
+            },
+            0xAF    =>  Instruction {
+                name:       "RES 5, A",
+                opcode:     0xAF,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a &= !0x20;
+                    Ok(())
+                },
+            },
+            0xB0    =>  Instruction {
+                name:       "RES 6, B",
+                opcode:     0xB0,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b &= !0x40;
+                    Ok(())
+                },
+            },
+            0xB1    =>  Instruction {
+                name:       "RES 6, C",
+                opcode:     0xB1,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c &= !0x40;
+                    Ok(())
+                },
+            },
+            0xB2    =>  Instruction {
+                name:       "RES 6, D",
+                opcode:     0xB2,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d &= !0x40;
+                    Ok(())
+                },
+            },
+            0xB3    =>  Instruction {
+                name:       "RES 6, E",
+                opcode:     0xB3,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e &= !0x40;
+                    Ok(())
+                },
+            },
+            0xB4    =>  Instruction {
+                name:       "RES 6, H",
+                opcode:     0xB4,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h &= !0x40;
+                    Ok(())
+                },
+            },
+            0xB5    =>  Instruction {
+                name:       "RES 6, L",
+                opcode:     0xB5,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l &= !0x40;
+                    Ok(())
+                },
+            },
+            0xB6    =>  Instruction {
+                name:       "RES 6, (HL)",
+                opcode:     0xB6,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x40);
+                    Ok(())
+                },
+            },
+            0xB7    =>  Instruction {
+                name:       "RES 6, A",
+                opcode:     0xB7,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a &= !0x40;
+                    Ok(())
+                },
+            },
+            0xB8    =>  Instruction {
+                name:       "RES 7, B",
+                opcode:     0xB8,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b &= !0x80;
+                    Ok(())
+                },
+            },
+            0xB9    =>  Instruction {
+                name:       "RES 7, C",
+                opcode:     0xB9,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c &= !0x80;
+                    Ok(())
+                },
+            },
+            0xBA    =>  Instruction {
+                name:       "RES 7, D",
+                opcode:     0xBA,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d &= !0x80;
+                    Ok(())
+                },
+            },
+            0xBB    =>  Instruction {
+                name:       "RES 7, E",
+                opcode:     0xBB,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e &= !0x80;
+                    Ok(())
+                },
+            },
+            0xBC    =>  Instruction {
+                name:       "RES 7, H",
+                opcode:     0xBC,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h &= !0x80;
+                    Ok(())
+                },
+            },
+            0xBD    =>  Instruction {
+                name:       "RES 7, L",
+                opcode:     0xBD,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l &= !0x80;
+                    Ok(())
+                },
+            },
+            0xBE    =>  Instruction {
+                name:       "RES 7, (HL)",
+                opcode:     0xBE,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x80);
+                    Ok(())
+                },
+            },
+            0xBF    =>  Instruction {
+                name:       "RES 3, A",
+                opcode:     0xBF,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a &= !0x80;
+                    Ok(())
+                },
+            },
+            0xC0    =>  Instruction {
+                name:       "SET 0, B",
+                opcode:     0xC0,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b |= 0x01;
+                    Ok(())
+                },
+            },
+            0xC1    =>  Instruction {
+                name:       "SET 0, C",
+                opcode:     0xC1,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c |= 0x01;
+                    Ok(())
+                },
+            },
+            0xC2    =>  Instruction {
+                name:       "SET 0, D",
+                opcode:     0xC2,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d |= 0x01;
+                    Ok(())
+                },
+            },
+            0xC3    =>  Instruction {
+                name:       "SET 0, E",
+                opcode:     0xC3,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e |= 0x01;
+                    Ok(())
+                },
+            },
+            0xC4    =>  Instruction {
+                name:       "SET 0, H",
+                opcode:     0xC4,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h |= 0x01;
+                    Ok(())
+                },
+            },
+            0xC5    =>  Instruction {
+                name:       "SET 0, L",
+                opcode:     0xC5,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l |= 0x01;
+                    Ok(())
+                },
+            },
+            0xC6    =>  Instruction {
+                name:       "SET 0, (HL)",
+                opcode:     0xC6,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x01);
+                    Ok(())
+                },
+            },
+            0xC7    =>  Instruction {
+                name:       "SET 0, A",
+                opcode:     0xC7,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a |= 0x01;
+                    Ok(())
+                },
+            },
+            0xC8    =>  Instruction {
+                name:       "SET 1, B",
+                opcode:     0xC8,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b |= 0x02;
+                    Ok(())
+                },
+            },
+            0xC9    =>  Instruction {
+                name:       "SET 1, C",
+                opcode:     0xC9,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c |= 0x02;
+                    Ok(())
+                },
+            },
+            0xCA    =>  Instruction {
+                name:       "SET 1, D",
+                opcode:     0xCA,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d |= 0x02;
+                    Ok(())
+                },
+            },
+            0xCB    =>  Instruction {
+                name:       "SET 1, E",
+                opcode:     0xCB,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e |= 0x02;
+                    Ok(())
+                },
+            },
+            0xCC    =>  Instruction {
+                name:       "SET 1, H",
+                opcode:     0xCC,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h |= 0x02;
+                    Ok(())
+                },
+            },
+            0xCD    =>  Instruction {
+                name:       "SET 1, L",
+                opcode:     0xCD,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l |= 0x02;
+                    Ok(())
+                },
+            },
+            0xCE    =>  Instruction {
+                name:       "SET 1, (HL)",
+                opcode:     0xCE,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x02);
+                    Ok(())
+                },
+            },
+            0xCF    =>  Instruction {
+                name:       "SET 1, A",
+                opcode:     0xCF,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a |= 0x02;
+                    Ok(())
+                },
+            },
+            0xD0    =>  Instruction {
+                name:       "SET 2, B",
+                opcode:     0xD0,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b |= 0x04;
+                    Ok(())
+                },
+            },
+            0xD1    =>  Instruction {
+                name:       "SET 2, C",
+                opcode:     0xD1,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c |= 0x04;
+                    Ok(())
+                },
+            },
+            0xD2    =>  Instruction {
+                name:       "SET 2, D",
+                opcode:     0xD2,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d |= 0x04;
+                    Ok(())
+                },
+            },
+            0xD3    =>  Instruction {
+                name:       "SET 2, E",
+                opcode:     0xD3,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e |= 0x04;
+                    Ok(())
+                },
+            },
+            0xD4    =>  Instruction {
+                name:       "SET 2, H",
+                opcode:     0xD4,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h |= 0x04;
+                    Ok(())
+                },
+            },
+            0xD5    =>  Instruction {
+                name:       "SET 2, L",
+                opcode:     0xD5,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l |= 0x04;
+                    Ok(())
+                },
+            },
+            0xD6    =>  Instruction {
+                name:       "SET 2, (HL)",
+                opcode:     0xD6,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x04);
+                    Ok(())
+                },
+            },
+            0xD7    =>  Instruction {
+                name:       "SET 2, A",
+                opcode:     0xD7,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a |= 0x04;
+                    Ok(())
+                },
+            },
+            0xD8    =>  Instruction {
+                name:       "SET 3, B",
+                opcode:     0xD8,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b |= 0x08;
+                    Ok(())
+                },
+            },
+            0xD9    =>  Instruction {
+                name:       "SET 3, C",
+                opcode:     0xD9,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c |= 0x08;
+                    Ok(())
+                },
+            },
+            0xDA    =>  Instruction {
+                name:       "SET 3, D",
+                opcode:     0xDA,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d |= 0x08;
+                    Ok(())
+                },
+            },
+            0xDB    =>  Instruction {
+                name:       "SET 3, E",
+                opcode:     0xDB,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e |= 0x08;
+                    Ok(())
+                },
+            },
+            0xDC    =>  Instruction {
+                name:       "SET 3, H",
+                opcode:     0xDC,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h |= 0x08;
+                    Ok(())
+                },
+            },
+            0xDD    =>  Instruction {
+                name:       "SET 3, L",
+                opcode:     0xDD,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l |= 0x08;
+                    Ok(())
+                },
+            },
+            0xDE    =>  Instruction {
+                name:       "SET 3, (HL)",
+                opcode:     0xDE,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x08);
+                    Ok(())
+                },
+            },
+            0xDF    =>  Instruction {
+                name:       "SET 3, A",
+                opcode:     0xDF,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a |= 0x08;
+                    Ok(())
+                },
+            },
+            0xE0    =>  Instruction {
+                name:       "SET 4, B",
+                opcode:     0xE0,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b |= 0x10;
+                    Ok(())
+                },
+            },
+            0xE1    =>  Instruction {
+                name:       "SET 4, C",
+                opcode:     0xE1,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c |= 0x10;
+                    Ok(())
+                },
+            },
+            0xE2    =>  Instruction {
+                name:       "SET 4, D",
+                opcode:     0xE2,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d |= 0x10;
+                    Ok(())
+                },
+            },
+            0xE3    =>  Instruction {
+                name:       "SET 4, E",
+                opcode:     0xE3,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e |= 0x10;
+                    Ok(())
+                },
+            },
+            0xE4    =>  Instruction {
+                name:       "SET 4, H",
+                opcode:     0xE4,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h |= 0x10;
+                    Ok(())
+                },
+            },
+            0xE5    =>  Instruction {
+                name:       "SET 4, L",
+                opcode:     0xE5,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l |= 0x10;
+                    Ok(())
+                },
+            },
+            0xE6    =>  Instruction {
+                name:       "SET 4, (HL)",
+                opcode:     0xE6,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x10);
+                    Ok(())
+                },
+            },
+            0xE7    =>  Instruction {
+                name:       "SET 4, A",
+                opcode:     0xE7,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a |= 0x10;
+                    Ok(())
+                },
+            },
+            0xE8    =>  Instruction {
+                name:       "SET 5, B",
+                opcode:     0xE8,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b |= 0x20;
+                    Ok(())
+                },
+            },
+            0xE9    =>  Instruction {
+                name:       "SET 5, C",
+                opcode:     0xE9,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c |= 0x20;
+                    Ok(())
+                },
+            },
+            0xEA    =>  Instruction {
+                name:       "SET 5, D",
+                opcode:     0xEA,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d |= 0x20;
+                    Ok(())
+                },
+            },
+            0xEB    =>  Instruction {
+                name:       "SET 5, E",
+                opcode:     0xEB,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e |= 0x20;
+                    Ok(())
+                },
+            },
+            0xEC    =>  Instruction {
+                name:       "SET 5, H",
+                opcode:     0xEC,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h |= 0x20;
+                    Ok(())
+                },
+            },
+            0xED    =>  Instruction {
+                name:       "SET 5, L",
+                opcode:     0xED,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l |= 0x20;
+                    Ok(())
+                },
+            },
+            0xEE    =>  Instruction {
+                name:       "SET 5, (HL)",
+                opcode:     0xEE,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x20);
+                    Ok(())
+                },
+            },
+            0xEF    =>  Instruction {
+                name:       "SET 5, A",
+                opcode:     0xEF,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a |= 0x20;
+                    Ok(())
+                },
+            },
+            0xF0    =>  Instruction {
+                name:       "SET 6, B",
+                opcode:     0xF0,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b |= 0x40;
+                    Ok(())
+                },
+            },
+            0xF1    =>  Instruction {
+                name:       "SET 6, C",
+                opcode:     0xF1,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c |= 0x40;
+                    Ok(())
+                },
+            },
+            0xF2    =>  Instruction {
+                name:       "SET 6, D",
+                opcode:     0xF2,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d |= 0x40;
+                    Ok(())
+                },
+            },
+            0xF3    =>  Instruction {
+                name:       "SET 6, E",
+                opcode:     0xF3,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e |= 0x40;
+                    Ok(())
+                },
+            },
+            0xF4    =>  Instruction {
+                name:       "SET 6, H",
+                opcode:     0xF4,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h |= 0x40;
+                    Ok(())
+                },
+            },
+            0xF5    =>  Instruction {
+                name:       "SET 6, L",
+                opcode:     0xF5,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l |= 0x40;
+                    Ok(())
+                },
+            },
+            0xF6    =>  Instruction {
+                name:       "SET 6, (HL)",
+                opcode:     0xF6,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x40);
+                    Ok(())
+                },
+            },
+            0xF7    =>  Instruction {
+                name:       "SET 6, A",
+                opcode:     0xF7,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a |= 0x40;
+                    Ok(())
+                },
+            },
+            0xF8    =>  Instruction {
+                name:       "SET 7, B",
+                opcode:     0xF8,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.b |= 0x80;
+                    Ok(())
+                },
+            },
+            0xF9    =>  Instruction {
+                name:       "SET 7, C",
+                opcode:     0xF9,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.c |= 0x80;
+                    Ok(())
+                },
+            },
+            0xFA    =>  Instruction {
+                name:       "SET 7, D",
+                opcode:     0xFA,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.d |= 0x80;
+                    Ok(())
+                },
+            },
+            0xFB    =>  Instruction {
+                name:       "SET 7, E",
+                opcode:     0xFB,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.e |= 0x80;
+                    Ok(())
+                },
+            },
+            0xFC    =>  Instruction {
+                name:       "SET 7, H",
+                opcode:     0xFC,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.h |= 0x80;
+                    Ok(())
+                },
+            },
+            0xFD    =>  Instruction {
+                name:       "SET 7, L",
+                opcode:     0xFD,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.l |= 0x80;
+                    Ok(())
+                },
+            },
+            0xFE    =>  Instruction {
+                name:       "SET 7, (HL)",
+                opcode:     0xFE,
+                cycles:     16,
+                operation:  |cpu| {
+                    let addr = cpu.read_hl() as usize;
+                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x80);
+                    Ok(())
+                },
+            },
+            0xFF    =>  Instruction {
+                name:       "SET 3, A",
+                opcode:     0xFF,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.a |= 0x80;
+                    Ok(())
+                },
+            },
             _       =>  unimplemented!("can't decode: 0x{:02x}", opcode),
         }
     }
@@ -5518,4 +7643,43 @@ fn test_srln() {
     cpu.tick();
 
     assert_eq!(cpu.b, 0b0100_1100);
+}
+
+#[test]
+fn test_bitbr() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x47;      // BIT 0, A
+    cpu.a = 0b0000_0000;
+    
+    cpu.mmu.write8(0x00, 0xCB);
+    cpu.mmu.write8(0x01, opcode);   // if b & 0x01 == 0 { Flags::Z = 0; }
+    cpu.tick();
+
+    assert_eq!(cpu.f & Flags::Z == Flags::Z, true);
+}
+
+#[test]
+fn test_setbr() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xC0;      // SET 0, B
+    cpu.a = 0b0000_0000;
+    
+    cpu.mmu.write8(0x00, 0xCB);
+    cpu.mmu.write8(0x01, opcode);   // b |= 0x01
+    cpu.tick();
+
+    assert_eq!(cpu.b, 0x01);
+}
+
+#[test]
+fn test_resbr() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xA0;      // RES 4, B
+    cpu.b = 0b1111_1111;
+    
+    cpu.mmu.write8(0x00, 0xCB);
+    cpu.mmu.write8(0x01, opcode);   // b &= !0x10
+    cpu.tick();
+
+    assert_eq!(cpu.b, 0b1110_1111);
 }
