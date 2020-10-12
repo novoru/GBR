@@ -76,9 +76,9 @@ impl Cpu {
     }
 
     fn fetch16(&mut self) -> u16 {
-        let value = self.mmu.read16(self.pc as usize);
-        self.pc = self.pc.wrapping_add(2);
-        value
+        let lo = self.fetch();
+        let hi = self.fetch();
+        (hi as u16) << 8 | lo as u16
     }
 
     fn read_af(&self) -> u16 {
@@ -483,7 +483,15 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0x18    =>  Instruction {
+                name:       "JR e",
+                opcode:     0x18,
+                cycles:     8,
+                operation:  |cpu| {
+                    cpu.pc = (cpu.pc as i16 + (cpu.fetch() as i8 as i16)) as u16;
+                    Ok(())
+                },
+            },
             0x19    =>  Instruction {
                 name:       "ADD HL, DE",
                 opcode:     0x19,
@@ -602,7 +610,17 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0x20    =>  Instruction {
+                name:       "JP NZ, e",
+                opcode:     0x20,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.f & Flags::Z != Flags::Z {
+                        cpu.pc = (cpu.pc as i16 + (cpu.fetch() as i8 as i16)) as u16;
+                    }
+                    Ok(())
+                },
+            },
             0x21    =>  Instruction {
                 name:       "LD HL, nn",
                 opcode:     0x21,
@@ -721,7 +739,17 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0x28    =>  Instruction {
+                name:       "JP Z, e",
+                opcode:     0x28,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.f & Flags::Z == Flags::Z {
+                        cpu.pc = (cpu.pc as i16 + (cpu.fetch() as i8 as i16)) as u16;
+                    }
+                    Ok(())
+                },
+            },            
             0x29    =>  Instruction {
                 name:       "ADD HL, HL",
                 opcode:     0x29,
@@ -828,7 +856,17 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0x30    =>  Instruction {
+                name:       "JP NC, e",
+                opcode:     0x30,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.f & Flags::C != Flags::C {
+                        cpu.pc = (cpu.pc as i16 + (cpu.fetch() as i8 as i16)) as u16;
+                    }
+                    Ok(())
+                },
+            },            
             0x31    =>  Instruction {
                 name:       "LD SP, nn",
                 opcode:     0x31,
@@ -924,7 +962,17 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0x38    =>  Instruction {
+                name:       "JP C, e",
+                opcode:     0x38,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.pc = (cpu.pc as i16 + (cpu.fetch() as i8 as i16)) as u16;
+                    }
+                    Ok(())
+                },
+            },                   
             0x39    =>  Instruction {
                 name:       "ADD HL, SP",
                 opcode:     0x19,
@@ -3089,7 +3137,39 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0xC2    =>  Instruction {
+                name:       "JP NZ, nn",
+                opcode:     0xC2,
+                cycles:     12,
+                operation:  |cpu| {
+                    if cpu.f & Flags::Z != Flags::Z {
+                        cpu.pc = cpu.fetch16();
+                    }
+                    Ok(())
+                },
+            },
+            0xC3    =>  Instruction {
+                name:       "JP nn",
+                opcode:     0xC3,
+                cycles:     12,
+                operation:  |cpu| {
+                    cpu.pc = cpu.fetch16();
+                    Ok(())
+                },
+            },
+            0xC4    =>  Instruction {
+                name:       "CALL NZ, nn",
+                opcode:     0xC4,
+                cycles:     12,
+                operation:  |cpu| {
+                    if cpu.f & Flags::Z != Flags::Z {
+                        cpu.push((cpu.pc >> 8) as u8);
+                        cpu.push((cpu.pc & 0xFF) as u8);
+                        cpu.pc = cpu.fetch16();
+                    }
+                    Ok(())
+                },
+            },
             0xC5    =>  Instruction {
                 name:       "PUSH BC",
                 opcode:     0xC5,
@@ -3128,11 +3208,45 @@ impl Cpu {
                 },
             },
 
+            0xCA    =>  Instruction {
+                name:       "JP Z, nn",
+                opcode:     0xCA,
+                cycles:     12,
+                operation:  |cpu| {
+                    if cpu.f & Flags::Z == Flags::Z {
+                        cpu.pc = cpu.fetch16();
+                    }
+                    Ok(())
+                },
+            },
             0xCB    =>  {
                 let opcode_cb = self.fetch();
                 self.decode_cb(opcode_cb)
             },
-            
+            0xCC    =>  Instruction {
+                name:       "CALL Z, nn",
+                opcode:     0xCC,
+                cycles:     12,
+                operation:  |cpu| {
+                    if cpu.f & Flags::Z == Flags::Z {
+                        cpu.push((cpu.pc >> 8) as u8);
+                        cpu.push((cpu.pc & 0xFF) as u8);
+                        cpu.pc = cpu.fetch16();
+                    }
+                    Ok(())
+                },
+            },
+            0xCD    =>  Instruction {
+                name:       "CALL nn",
+                opcode:     0xCD,
+                cycles:     12,
+                operation:  |cpu| {
+                    cpu.push((cpu.pc >> 8) as u8);
+                    cpu.push((cpu.pc & 0xFF) as u8);
+                    cpu.pc = cpu.fetch16();
+                    Ok(())
+                },
+            },
             0xCE    =>  Instruction {
                 name:       "ADC A, #",
                 opcode:     0xCE,
@@ -3172,7 +3286,31 @@ impl Cpu {
                     Ok(())
                 },
             },
+            0xD2    =>  Instruction {
+                name:       "JP NC, nn",
+                opcode:     0xD2,
+                cycles:     12,
+                operation:  |cpu| {
+                    if cpu.f & Flags::C != Flags::C {
+                        cpu.pc = cpu.fetch16();
+                    }
+                    Ok(())
+                },
+            },
 
+            0xD4    =>  Instruction {
+                name:       "CALL NC, nn",
+                opcode:     0xD4,
+                cycles:     12,
+                operation:  |cpu| {
+                    if cpu.f & Flags::C != Flags::C {
+                        cpu.push((cpu.pc >> 8) as u8);
+                        cpu.push((cpu.pc & 0xFF) as u8);
+                        cpu.pc = cpu.fetch16();
+                    }
+                    Ok(())
+                },
+            },
             0xD5    =>  Instruction {
                 name:       "PUSH DE",
                 opcode:     0xD5,
@@ -3211,6 +3349,32 @@ impl Cpu {
                 },
             },
             
+            0xDA    =>  Instruction {
+                name:       "JP C, nn",
+                opcode:     0xDA,
+                cycles:     12,
+                operation:  |cpu| {
+                    if cpu.f & Flags::C != Flags::C {
+                        cpu.pc = cpu.fetch16();
+                    }
+                    Ok(())
+                },
+            },
+            
+            0xDC    =>  Instruction {
+                name:       "CALL C, nn",
+                opcode:     0xDC,
+                cycles:     12,
+                operation:  |cpu| {
+                    if cpu.f & Flags::C == Flags::C {
+                        cpu.push((cpu.pc >> 8) as u8);
+                        cpu.push((cpu.pc & 0xFF) as u8);
+                        cpu.pc = cpu.fetch16();
+                    }
+                    Ok(())
+                },
+            },
+
             0xDE    =>  Instruction {
                 name:       "SBC A, #",
                 opcode:     0xDE,
@@ -3325,7 +3489,15 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0xE9    =>  Instruction {
+                name:       "JP (HL)",
+                opcode:     0xE9,
+                cycles:     4,
+                operation:  |cpu| {
+                    cpu.pc = cpu.read_hl();
+                    Ok(())
+                },
+            },
             0xEA    =>  Instruction {
                 name:       "LD (nn), A",
                 opcode:     0xEA,
@@ -7699,4 +7871,85 @@ fn test_resbr() {
     cpu.tick();
 
     assert_eq!(cpu.b, 0b1110_1111);
+}
+
+#[test]
+fn test_jpnn() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xC3;      // JP nn
+    
+    cpu.mmu.write8(0x00, opcode);
+    cpu.mmu.write8(0x01, 0x12);
+    cpu.mmu.write8(0x02, 0x34);
+    cpu.tick();
+
+    assert_eq!(cpu.pc, 0x3412);
+}
+
+#[test]
+fn test_jpccnn() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xC2;      // JP NZ, nn
+
+    cpu.mmu.write8(0x00, opcode);
+    cpu.mmu.write8(0x01, 0x12);
+    cpu.mmu.write8(0x02, 0x34);
+    cpu.tick();
+
+    assert_eq!(cpu.pc, 0x3412);
+}
+
+#[test]
+fn test_jphl() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xE9;      // JP (HL)
+
+    cpu.write_hl(0x1234);
+
+    cpu.mmu.write8(0x00, opcode);
+    cpu.tick();
+
+    assert_eq!(cpu.pc, 0x1234);
+}
+
+#[test]
+fn test_jre() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x18;      // JR e
+
+    cpu.write_hl(0x1234);
+
+    cpu.mmu.write8(0x00, opcode);
+    cpu.mmu.write8(0x01, -2 as i8 as u8);
+    cpu.tick();
+
+    assert_eq!(cpu.pc, 0xFFFF);
+}
+
+#[test]
+fn test_jrcce() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0x20;      // JR NZ e
+
+    cpu.mmu.write8(0x00, opcode);
+    cpu.mmu.write8(0x01, -2 as i8 as u8);
+    cpu.tick();
+
+    assert_eq!(cpu.pc, 0xFFFF);
+}
+
+#[test]
+fn test_callnn() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xCD;      // CALL nn
+    cpu.sp = 0x100;
+
+    cpu.mmu.write8(0x00, opcode);
+    cpu.mmu.write8(0x01, 0x12);
+    cpu.mmu.write8(0x02, 0x34);
+    cpu.tick();
+
+    assert_eq!(cpu.pc, 0x3412);
+    assert_eq!(cpu.sp, 0x00FE);
+    assert_eq!(cpu.mmu.read8(cpu.sp as usize), 0x01);
 }

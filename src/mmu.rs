@@ -56,7 +56,7 @@ impl Io for Mmu {
             // 0xFF80 ..= 0xFFFE   =>  self.ram.read8(addr),
             // Interrupt Enable Register
             0xFFFF              =>  self.interrupt.read8(addr),
-            _                   =>  unimplemented!(),
+            _                   =>  unimplemented!("0x{:08x}", addr),
         }
     }
 
@@ -88,7 +88,7 @@ impl Io for Mmu {
             // 0xFF80 ..= 0xFFFE   =>  self.ram.read16(addr),
             // Interrupt Enable Register
             0xFFFF              =>  self.interrupt.read16(addr),
-            _                   =>  unimplemented!(),
+            _                   =>  unimplemented!("0x{:08x}", addr),
         }
     }
 
@@ -120,7 +120,7 @@ impl Io for Mmu {
             // 0xFF80 ..= 0xFFFE   =>  self.ram.write8(addr),
             // Interrupt Enable Register
             0xFFFF              =>  self.interrupt.write8(addr, data),
-            _                   =>  unimplemented!(),
+            _                   =>  unimplemented!("0x{:08x}", addr),
         }
     }
 
@@ -152,7 +152,7 @@ impl Io for Mmu {
             // 0xFF80 ..= 0xFFFE   =>  self.ram.write16(addr),
             // Interrupt Enable Register
             0xFFFF              =>  self.interrupt.write16(addr, data),
-            _                   =>  unimplemented!(),
+            _                   =>  unimplemented!("0x{:08x}", addr),
         }
     }
 }
