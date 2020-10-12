@@ -12,10 +12,10 @@ bitflags! {
         const N     = 0b01000000;
         const H     = 0b00100000;
         const C     = 0b00010000;
-        const _3    = 0b00001000;
-        const _2    = 0b00000100;
-        const _1    = 0b00000010;
-        const _0    = 0b00000001;
+        const _BIT3 = 0b00001000;
+        const _BIT2 = 0b00000100;
+        const _BIT1 = 0b00000010;
+        const _BIT0 = 0b00000001;
         const NONE  = 0b00000000;
     }
 }
