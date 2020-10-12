@@ -78,11 +78,11 @@ impl Cpu {
     fn fetch16(&mut self) -> u16 {
         let lo = self.fetch();
         let hi = self.fetch();
-        (hi as u16) << 8 | lo as u16
+        ((hi as i16) << 8) as u16 | lo as u16
     }
 
     fn read_af(&self) -> u16 {
-        (self.a as u16) << 8 | self.f.bits as u16
+        ((self.a as i16) << 8) as u16 | self.f.bits as u16
     }
 
     fn write_af(&mut self, data: u16) {
@@ -91,7 +91,7 @@ impl Cpu {
     }
 
     fn read_bc(&self) -> u16 {
-        (self.b as u16) << 8 | self.c as u16
+        ((self.b as i16) << 8) as u16 | self.c as u16
     }
     
     fn write_bc(&mut self, data: u16) {
@@ -100,7 +100,7 @@ impl Cpu {
     }
     
     fn read_de(&self) -> u16 {
-        (self.d as u16) << 8 | self.e as u16
+        ((self.d as i16) << 8) as u16 | self.e as u16
     }
     
     fn write_de(&mut self, data: u16) {
@@ -109,7 +109,7 @@ impl Cpu {
     }
     
     fn read_hl(&self) -> u16 {
-        (self.h as u16) << 8 | self.l as u16
+        ((self.h as i16) << 8) as u16 | self.l as u16
     }
     
     fn write_hl(&mut self, data: u16) {
@@ -1145,6 +1145,15 @@ impl Cpu {
                     Ok(())
                 },
             },
+            0x47    =>  Instruction {
+                name:       "LD B, A",
+                opcode:     0x47,
+                cycles:     4,
+                operation:  |cpu| {
+                    cpu.b = cpu.a;
+                    Ok(())
+                },
+            },
             0x48    =>  Instruction {
                 name:       "LD C, B",
                 opcode:     0x48,
@@ -1208,7 +1217,15 @@ impl Cpu {
                     Ok(())
                 },
             },
-            // 0x4F
+            0x4F    =>  Instruction {
+                name:       "LD C, A",
+                opcode:     0x4F,
+                cycles:     4,
+                operation:  |cpu| {
+                    cpu.c = cpu.a;
+                    Ok(())
+                },
+            },
             0x50    =>  Instruction {
                 name:       "LD D, B",
                 opcode:     0x50,
@@ -1272,7 +1289,15 @@ impl Cpu {
                     Ok(())
                 },
             },
-            // 0x57
+            0x57    =>  Instruction {
+                name:       "LD D, A",
+                opcode:     0x57,
+                cycles:     4,
+                operation:  |cpu| {
+                    cpu.d = cpu.a;
+                    Ok(())
+                },
+            },
             0x58    =>  Instruction {
                 name:       "LD E, B",
                 opcode:     0x58,
@@ -1336,7 +1361,15 @@ impl Cpu {
                     Ok(())
                 },
             },
-            // 0x5F
+            0x5F    =>  Instruction {
+                name:       "LD E, A",
+                opcode:     0x5F,
+                cycles:     4,
+                operation:  |cpu| {
+                    cpu.e = cpu.a;
+                    Ok(())
+                },
+            },
             0x60    =>  Instruction {
                 name:       "LD H, B",
                 opcode:     0x60,
@@ -1400,7 +1433,15 @@ impl Cpu {
                     Ok(())
                 },
             },
-            // 0x67
+            0x67    =>  Instruction {
+                name:       "LD H, A",
+                opcode:     0x67,
+                cycles:     4,
+                operation:  |cpu| {
+                    cpu.h = cpu.a;
+                    Ok(())
+                },
+            },
             0x68    =>  Instruction {
                 name:       "LD L, B",
                 opcode:     0x68,
@@ -1464,7 +1505,15 @@ impl Cpu {
                     Ok(())
                 },
             },
-            // 0x6F
+            0x6F    =>  Instruction {
+                name:       "LD L, A",
+                opcode:     0x6F,
+                cycles:     4,
+                operation:  |cpu| {
+                    cpu.l = cpu.a;
+                    Ok(())
+                },
+            },
             0x70    =>  Instruction {
                 name:       "LD (HL), B",
                 opcode:     0x70,
@@ -1610,7 +1659,6 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
             0x80    =>  Instruction {
                 name:       "ADD A, B",
                 opcode:     0x80,
@@ -1800,7 +1848,6 @@ impl Cpu {
                     Ok(())
                 },
             },
-
             0x87    =>  Instruction {
                 name:       "ADD A, A",
                 opcode:     0x87,
@@ -2024,7 +2071,6 @@ impl Cpu {
                     Ok(())
                 },
             },
-
             0x8F    =>  Instruction {
                 name:       "ADC A, A",
                 opcode:     0x8F,
@@ -2242,7 +2288,6 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
             0x97    =>  Instruction {
                 name:       "SUB A, A",
                 opcode:     0x97,
@@ -2466,7 +2511,6 @@ impl Cpu {
                     Ok(())
                 },
             },
-
             0x9F    =>  Instruction {
                 name:       "SBC A, A",
                 opcode:     0x9F,
@@ -2628,7 +2672,25 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0xA7    =>  Instruction {
+                name:       "AND A, A",
+                opcode:     0xA7,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.a;
+                    cpu.a = a & n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },            
             0xA8    =>  Instruction {
                 name:       "XOR A, B",
                 opcode:     0xA8,
@@ -2762,7 +2824,25 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0xAF    =>  Instruction {
+                name:       "XOR A, A",
+                opcode:     0xAF,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.a;
+                    cpu.a = a ^ n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },            
             0xB0    =>  Instruction {
                 name:       "OR A, B",
                 opcode:     0xB0,
@@ -2895,8 +2975,26 @@ impl Cpu {
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
-            },
-            
+            },            
+            0xB7    =>  Instruction {
+                name:       "OR A, A",
+                opcode:     0xB7,
+                cycles:     4,
+                operation:  |cpu| {
+                    let a = cpu.a;
+                    let n = cpu.a;
+                    cpu.a = a | n;
+                    if cpu.a == 0 {
+                        cpu.f.insert(Flags::Z);
+                    } else {
+                        cpu.f.remove(Flags::Z);
+                    }
+                    cpu.f.remove(Flags::N);
+                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::C);
+                    Ok(())
+                },
+            },            
             0xB8    =>  Instruction {
                 name:       "CP A, B",
                 opcode:     0xB8,
@@ -3078,8 +3176,7 @@ impl Cpu {
                     }
                     Ok(())
                 },
-            },
-            
+            },            
             0xBF    =>  Instruction {
                 name:       "CP A, A",
                 opcode:     0xBF,
@@ -3106,27 +3203,19 @@ impl Cpu {
                     Ok(())
                 },
             },
-
-            0xA7    =>  Instruction {
-                name:       "AND A, A",
-                opcode:     0xA7,
-                cycles:     4,
+            0xC0    =>  Instruction {
+                name:       "RET NZ",
+                opcode:     0xC0,
+                cycles:     8,
                 operation:  |cpu| {
-                    let a = cpu.a;
-                    let n = cpu.a;
-                    cpu.a = a & n;
-                    if cpu.a == 0 {
-                        cpu.f.insert(Flags::Z);
-                    } else {
-                        cpu.f.remove(Flags::Z);
+                    if cpu.f & Flags::Z != Flags::Z {
+                        let lo = cpu.pop();
+                        let hi = cpu.pop();
+                        cpu.pc = ((hi as i16) << 8) as u16 + lo as u16;
                     }
-                    cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
-                    cpu.f.remove(Flags::C);
                     Ok(())
                 },
             },
-
             0xC1    =>  Instruction {
                 name:       "POP BC",
                 opcode:     0xC1,
@@ -3207,7 +3296,41 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0xC7    =>  Instruction {
+                name:       "RST 0x00",
+                opcode:     0xC7,
+                cycles:     32,
+                operation:  |cpu| {
+                    cpu.push((cpu.pc >> 8) as u8);
+                    cpu.push((cpu.pc & 0xFF) as u8);
+                    cpu.pc = 0x0000;
+                    Ok(())
+                },
+            },
+            0xC8    =>  Instruction {
+                name:       "RET Z",
+                opcode:     0xC8,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.f & Flags::Z == Flags::Z {
+                        let lo = cpu.pop();
+                        let hi = cpu.pop();
+                        cpu.pc = ((hi as i16) << 8) as u16 + lo as u16;
+                    }
+                    Ok(())
+                },
+            },
+            0xC9    =>  Instruction {
+                name:       "RET",
+                opcode:     0xC9,
+                cycles:     8,
+                operation:  |cpu| {
+                    let lo = cpu.pop();
+                    let hi = cpu.pop();
+                    cpu.pc = ((hi as i16) << 8) as u16 + lo as u16;
+                    Ok(())
+                },
+            },
             0xCA    =>  Instruction {
                 name:       "JP Z, nn",
                 opcode:     0xCA,
@@ -3275,7 +3398,30 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0xCF    =>  Instruction {
+                name:       "RST 0x08",
+                opcode:     0xCF,
+                cycles:     32,
+                operation:  |cpu| {
+                    cpu.push((cpu.pc >> 8) as u8);
+                    cpu.push((cpu.pc & 0xFF) as u8);
+                    cpu.pc = 0x0008;
+                    Ok(())
+                },
+            },
+            0xD0    =>  Instruction {
+                name:       "RET NC",
+                opcode:     0xD0,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.f & Flags::C != Flags::C {
+                        let lo = cpu.pop();
+                        let hi = cpu.pop();
+                        cpu.pc = ((hi as i16) << 8) as u16 + lo as u16;
+                    }
+                    Ok(())
+                },
+            },            
             0xD1    =>  Instruction {
                 name:       "POP DE",
                 opcode:     0xD1,
@@ -3297,7 +3443,7 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            // 0xD3:    Undefined
             0xD4    =>  Instruction {
                 name:       "CALL NC, nn",
                 opcode:     0xD4,
@@ -3348,7 +3494,42 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0xD7    =>  Instruction {
+                name:       "RST 0x10",
+                opcode:     0xD7,
+                cycles:     32,
+                operation:  |cpu| {
+                    cpu.push((cpu.pc >> 8) as u8);
+                    cpu.push((cpu.pc & 0xFF) as u8);
+                    cpu.pc = 0x0010;
+                    Ok(())
+                },
+            },
+            0xD8    =>  Instruction {
+                name:       "RET C",
+                opcode:     0xD8,
+                cycles:     8,
+                operation:  |cpu| {
+                    if cpu.f & Flags::C == Flags::C {
+                        let lo = cpu.pop();
+                        let hi = cpu.pop();
+                        cpu.pc = ((hi as i16) << 8) as u16 + lo as u16;
+                    }
+                    Ok(())
+                },
+            },
+            0xD9    =>  Instruction {
+                name:       "RETI",
+                opcode:     0xD9,
+                cycles:     8,
+                operation:  |cpu| {
+                    let lo = cpu.pop();
+                    let hi = cpu.pop();
+                    cpu.pc = ((hi as i16) << 8) as u16 + lo as u16;
+                    cpu.mmu.enable_irq();
+                    Ok(())
+                },
+            },            
             0xDA    =>  Instruction {
                 name:       "JP C, nn",
                 opcode:     0xDA,
@@ -3360,7 +3541,7 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            // 0xDB:    Undefined            
             0xDC    =>  Instruction {
                 name:       "CALL C, nn",
                 opcode:     0xDC,
@@ -3374,7 +3555,7 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            // 0xDD:    Undefined
             0xDE    =>  Instruction {
                 name:       "SBC A, #",
                 opcode:     0xDE,
@@ -3403,7 +3584,17 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0xDF    =>  Instruction {
+                name:       "RST 0x18",
+                opcode:     0xDF,
+                cycles:     32,
+                operation:  |cpu| {
+                    cpu.push((cpu.pc >> 8) as u8);
+                    cpu.push((cpu.pc & 0xFF) as u8);
+                    cpu.pc = 0x0018;
+                    Ok(())
+                },
+            },
             0xE0    =>  Instruction {
                 name:       "LDH (n), A",
                 opcode:     0xE0,
@@ -3434,7 +3625,8 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            // 0xE3:    Undefined
+            // 0xE4:    Undefined
             0xE5    =>  Instruction {
                 name:       "PUSH HL",
                 opcode:     0xE5,
@@ -3464,7 +3656,17 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0xE7    =>  Instruction {
+                name:       "RST 0x20",
+                opcode:     0xE7,
+                cycles:     32,
+                operation:  |cpu| {
+                    cpu.push((cpu.pc >> 8) as u8);
+                    cpu.push((cpu.pc & 0xFF) as u8);
+                    cpu.pc = 0x0020;
+                    Ok(())
+                },
+            },
             0xE8    =>  Instruction {
                 name:       "ADD SP, #",
                 opcode:     0xE8,
@@ -3508,7 +3710,9 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            // 0xEB:    Undefined
+            // 0xEC:    Undefined
+            // 0xED:    Undefined
             0xEE    =>  Instruction {
                 name:       "XOR A, #",
                 opcode:     0xEE,
@@ -3528,7 +3732,17 @@ impl Cpu {
                     Ok(())
                 },
             },
-            
+            0xEF    =>  Instruction {
+                name:       "RST 0x28",
+                opcode:     0xEF,
+                cycles:     32,
+                operation:  |cpu| {
+                    cpu.push((cpu.pc >> 8) as u8);
+                    cpu.push((cpu.pc & 0xFF) as u8);
+                    cpu.pc = 0x0028;
+                    Ok(())
+                },
+            },            
             0xF0    =>  Instruction {
                 name:       "LDH A, (n)",
                 opcode:     0xF0,
@@ -3568,7 +3782,7 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            // 0xF4:    Undefined
             0xF5    =>  Instruction {
                 name:       "PUSH AF",
                 opcode:     0xF5,
@@ -3598,7 +3812,17 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            0xF7    =>  Instruction {
+                name:       "RST 0x30",
+                opcode:     0xF7,
+                cycles:     32,
+                operation:  |cpu| {
+                    cpu.push((cpu.pc >> 8) as u8);
+                    cpu.push((cpu.pc & 0xFF) as u8);
+                    cpu.pc = 0x0030;
+                    Ok(())
+                },
+            },
             0xF8    =>  Instruction {
                 name:       "LDHL SP, n",
                 opcode:     0xF8,
@@ -3650,7 +3874,8 @@ impl Cpu {
                     Ok(())
                 },
             },
-
+            // 0xFC:    Undefined
+            // 0xFD:    Undefined
             0xFE    =>  Instruction {
                 name:       "CP A, #",
                 opcode:     0xFE,
@@ -3674,6 +3899,17 @@ impl Cpu {
                     } else {
                         cpu.f.remove(Flags::C);
                     }
+                    Ok(())
+                },
+            },
+            0xFF    =>  Instruction {
+                name:       "RST 0x38",
+                opcode:     0xFF,
+                cycles:     32,
+                operation:  |cpu| {
+                    cpu.push((cpu.pc >> 8) as u8);
+                    cpu.push((cpu.pc & 0xFF) as u8);
+                    cpu.pc = 0x0038;
                     Ok(())
                 },
             },
@@ -7952,4 +8188,70 @@ fn test_callnn() {
     assert_eq!(cpu.pc, 0x3412);
     assert_eq!(cpu.sp, 0x00FE);
     assert_eq!(cpu.mmu.read8(cpu.sp as usize), 0x01);
+}
+
+#[test]
+fn test_rstn() {    
+    let mut cpu = Cpu::new();
+    let opcode = 0xFF;      // RST 0x38
+    cpu.sp = 0x100;
+
+    cpu.mmu.write8(0x00, opcode);
+    cpu.tick();
+
+    assert_eq!(cpu.pc, 0x0038);
+    assert_eq!(cpu.sp, 0x00FE);
+    assert_eq!(cpu.mmu.read16(cpu.sp as usize), 0x01);
+}
+
+#[test]
+fn test_ret() {    
+    let mut cpu = Cpu::new();
+    let opcode1 = 0xC5;     // PUSH BC
+    let opcode2 = 0xC9;     // RET
+    cpu.sp = 0x100;
+    cpu.write_bc(0x1234);
+
+    cpu.mmu.write8(0x00, opcode1);
+    cpu.mmu.write8(0x01, opcode2);
+    cpu.tick();
+    cpu.tick();
+
+    assert_eq!(cpu.pc, 0x1234);
+    assert_eq!(cpu.sp, 0x0100);
+}
+
+#[test]
+fn test_retcc() {    
+    let mut cpu = Cpu::new();
+    let opcode1 = 0xC5;     // PUSH BC
+    let opcode2 = 0xC0;     // RET NZ
+    cpu.sp = 0x100;
+    cpu.write_bc(0x1234);
+
+    cpu.mmu.write8(0x00, opcode1);
+    cpu.mmu.write8(0x01, opcode2);
+    cpu.tick();
+    cpu.tick();
+
+    assert_eq!(cpu.pc, 0x1234);
+    assert_eq!(cpu.sp, 0x0100);
+}
+
+#[test]
+fn test_reti() {    
+    let mut cpu = Cpu::new();
+    let opcode1 = 0xC5;     // PUSH BC
+    let opcode2 = 0xD9;     // RETI
+    cpu.sp = 0x100;
+    cpu.write_bc(0x1234);
+
+    cpu.mmu.write8(0x00, opcode1);
+    cpu.mmu.write8(0x01, opcode2);
+    cpu.tick();
+    cpu.tick();
+
+    assert_eq!(cpu.pc, 0x1234);
+    assert_eq!(cpu.sp, 0x0100);
+    assert_eq!(cpu.mmu.read8(0xFFFF as usize), 0b11111)
 }
