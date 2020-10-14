@@ -2,11 +2,13 @@ use crate::io::Io;
 use crate::ram::Ram;
 use crate::cartridge::Cartridge;
 use crate::interrupt::*;
+use crate::pad::Pad;
 
 pub struct Mmu {
     cartridge:  Cartridge,
     ram:        Ram,
     interrupt:  Interrupt,
+    pad:        Pad,
 }
 
 impl Mmu {
@@ -15,6 +17,7 @@ impl Mmu {
             cartridge:  cartridge,
             ram:        Ram::new(),
             interrupt:  Interrupt::new(),
+            pad:        Pad::new(),
         }
     }
 
@@ -47,6 +50,7 @@ impl Io for Mmu {
             // Empty but unusable for I/O
             0xFEA0 ..= 0xFEFF   =>  panic!("unsupport read at {:04x}", addr),
             // I/O ports
+            0xFF00              =>  self.pad.read8(),
             // 0xFF00 ..= 0xFF3B   =>  self.ioports.read8(addr),
             // Interrupt Flag Register
             0xFF0F              =>  self.interrupt.read8(addr),
@@ -79,6 +83,7 @@ impl Io for Mmu {
             // Empty but unusable for I/O
             0xFEA0 ..= 0xFEFF   =>  panic!("unsupport read at {:04x}", addr),
             // I/O ports
+            0xFF00              =>  panic!("unsupport read16 at {:04x}", addr),
             // 0xFF00 ..= 0xFF3B   =>  self.ioports.read16(addr),
             // Interrupt Flag Register
             0xFF0F              =>  self.interrupt.read16(addr),
@@ -111,6 +116,7 @@ impl Io for Mmu {
             // Empty but unusable for I/O
             0xFEA0 ..= 0xFEFF   =>  panic!("unsupport write at {:04x}", addr),
             // I/O ports
+            0xFF00              =>  self.pad.write8(data),            
             // 0xFF00 ..= 0xFF3B   =>  self.ioports.write8(addr),
             // Interrupt Flag Register
             0xFF0F              =>  self.interrupt.write8(addr, data),
@@ -143,6 +149,7 @@ impl Io for Mmu {
             // Empty but unusable for I/O
             0xFEA0 ..= 0xFEFF   =>  panic!("unsupport write at {:04x}", addr),
             // I/O ports
+            0xFF00              =>  panic!("unsupport write16 at {:04x}", addr),
             // 0xFF00 ..= 0xFF3B   =>  self.ioports.write16(addr),
             // Interrupt Flag Register
             0xFF0F              =>  self.interrupt.write16(addr, data),
