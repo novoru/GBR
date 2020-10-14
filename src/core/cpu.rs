@@ -2,9 +2,9 @@
 use bitflags::*;
 use std::fmt;
 
-use crate::io::Io;
-use crate::bus::Bus;
-use crate::cartridge::Cartridge;
+use crate::core::io::Io;
+use crate::core::bus::Bus;
+use crate::core::cartridge::Cartridge;
 
 bitflags! {
     struct Flags: u8 {

@@ -1,7 +1,7 @@
 #[macro_use]
 use bitflags::*;
 
-use crate::io::Io;
+use crate::core::io::Io;
 
 bitflags! {
     struct If: u8 {

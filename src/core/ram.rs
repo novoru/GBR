@@ -1,4 +1,4 @@
-use crate::io::Io;
+use crate::core::io::Io;
 
 const RAM_SIZE: usize   = 8192;
 

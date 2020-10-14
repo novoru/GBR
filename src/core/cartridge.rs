@@ -1,4 +1,4 @@
-use crate::io::Io;
+use crate::core::io::Io;
 
 const ROM_SIZE: usize   = 32768;
 
