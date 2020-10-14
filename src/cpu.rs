@@ -47,7 +47,6 @@ impl fmt::Display for Cpu {
 
 impl Cpu {
     pub fn new() -> Self {
-        let cartridge = Cartridge::new();
         Cpu {
             a:      0,
             b:      0,
@@ -59,7 +58,7 @@ impl Cpu {
             f:      Flags::empty(),
             sp:     0,
             pc:     0,
-            bus:    Bus::from_cartridge(cartridge),
+            bus:    Bus::no_cartridge(),
         }
     }
 

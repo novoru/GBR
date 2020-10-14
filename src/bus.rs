@@ -12,9 +12,9 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn from_cartridge(cartridge: Cartridge) -> Self {
+    pub fn no_cartridge() -> Self {
         Bus {
-            cartridge:  cartridge,
+            cartridge:  Cartridge::no_cartridge(),
             ram:        Ram::new(),
             interrupt:  Interrupt::new(),
             pad:        Pad::new(),

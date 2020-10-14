@@ -17,7 +17,7 @@ pub struct Cartridge {
 }
 
 impl Cartridge {
-    pub fn new() -> Self {
+    pub fn no_cartridge() -> Self {
         Cartridge {
             rom:    [0; ROM_SIZE],
             mbc:    None,
