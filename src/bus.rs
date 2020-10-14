@@ -4,16 +4,16 @@ use crate::cartridge::Cartridge;
 use crate::interrupt::*;
 use crate::pad::Pad;
 
-pub struct Mmu {
+pub struct Bus {
     cartridge:  Cartridge,
     ram:        Ram,
     interrupt:  Interrupt,
     pad:        Pad,
 }
 
-impl Mmu {
+impl Bus {
     pub fn from_cartridge(cartridge: Cartridge) -> Self {
-        Mmu {
+        Bus {
             cartridge:  cartridge,
             ram:        Ram::new(),
             interrupt:  Interrupt::new(),
@@ -30,7 +30,7 @@ impl Mmu {
     }
 }
 
-impl Io for Mmu {
+impl Io for Bus {
     fn read8(&self, addr: usize) -> u8 {
         match addr {
             // 16kB ROM bank #0

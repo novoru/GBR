@@ -3,7 +3,7 @@ use bitflags::*;
 use std::fmt;
 
 use crate::io::Io;
-use crate::mmu::Mmu;
+use crate::bus::Bus;
 use crate::cartridge::Cartridge;
 
 bitflags! {
@@ -31,7 +31,7 @@ pub struct Cpu {
     f:      Flags,
     sp:     u16,
     pc:     u16,
-    mmu:    Mmu,
+    bus:    Bus,
 }
 
 impl fmt::Display for Cpu {
@@ -59,7 +59,7 @@ impl Cpu {
             f:      Flags::empty(),
             sp:     0,
             pc:     0,
-            mmu:    Mmu::from_cartridge(cartridge),
+            bus:    Bus::from_cartridge(cartridge),
         }
     }
 
@@ -70,7 +70,7 @@ impl Cpu {
     }
 
     fn fetch(&mut self) -> u8 {
-        let value = self.mmu.read8(self.pc as usize);
+        let value = self.bus.read8(self.pc as usize);
         self.pc = self.pc.wrapping_add(1);
         value
     }
@@ -119,13 +119,13 @@ impl Cpu {
 
     fn push(&mut self, data: u8) {
         self.sp = self.sp.wrapping_sub(1);
-        self.mmu.write8(self.sp as usize, data);
+        self.bus.write8(self.sp as usize, data);
     }
 
     fn pop(&mut self) -> u8 {
         let addr = self.sp;
         self.sp = addr.wrapping_add(1);
-        self.mmu.read8(addr as usize)
+        self.bus.read8(addr as usize)
     }
 
     fn decode(&mut self, opcode: u8) -> Instruction {
@@ -154,7 +154,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let addr = cpu.read_bc() as usize;
-                    cpu.mmu.write8(addr, cpu.a);
+                    cpu.bus.write8(addr, cpu.a);
                     Ok(())
                 },
             },
@@ -248,7 +248,7 @@ impl Cpu {
                 cycles:     20,
                 operation:  |cpu| {
                     let addr = cpu.fetch16() as usize;
-                    cpu.mmu.write16(addr, cpu.sp);
+                    cpu.bus.write16(addr, cpu.sp);
                     Ok(())
                 },
             },
@@ -279,7 +279,7 @@ impl Cpu {
                 opcode:     0x0A,
                 cycles:     8,
                 operation:  |cpu| {
-                    cpu.a = cpu.mmu.read8(cpu.read_bc() as usize);
+                    cpu.a = cpu.bus.read8(cpu.read_bc() as usize);
                     Ok(())
                 },
             },
@@ -392,7 +392,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let addr = cpu.read_de() as usize;
-                    cpu.mmu.write8(addr, cpu.a);
+                    cpu.bus.write8(addr, cpu.a);
                     Ok(())
                 },
             },
@@ -519,7 +519,7 @@ impl Cpu {
                 opcode:     0x1A,
                 cycles:     8,
                 operation:  |cpu| {
-                    cpu.a = cpu.mmu.read8(cpu.read_de() as usize);
+                    cpu.a = cpu.bus.read8(cpu.read_de() as usize);
                     Ok(())
                 },
             },
@@ -638,7 +638,7 @@ impl Cpu {
                 operation:  |cpu| {
                     let addr = cpu.read_hl();
                     cpu.write_hl(addr.wrapping_add(1));
-                    cpu.mmu.write8(addr as usize, cpu.a);
+                    cpu.bus.write8(addr as usize, cpu.a);
                     Ok(())
                 },
             },
@@ -779,7 +779,7 @@ impl Cpu {
                 operation:  |cpu| {
                     let addr = cpu.read_hl();
                     cpu.write_hl(addr.wrapping_add(1));
-                    cpu.a = cpu.mmu.read8(addr as usize);
+                    cpu.a = cpu.bus.read8(addr as usize);
                     Ok(())
                 },
             },
@@ -884,7 +884,7 @@ impl Cpu {
                 operation:  |cpu| {
                     let addr = cpu.read_hl();
                     cpu.write_hl(addr.wrapping_sub(1));
-                    cpu.mmu.write8(addr as usize, cpu.a);
+                    cpu.bus.write8(addr as usize, cpu.a);
                     Ok(())
                 },
             },
@@ -903,15 +903,15 @@ impl Cpu {
                 cycles:     12,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let n = cpu.mmu.read8(addr);
-                    cpu.mmu.write8(addr, n.wrapping_add(1));
-                    if cpu.mmu.read8(addr) == 0 {
+                    let n = cpu.bus.read8(addr);
+                    cpu.bus.write8(addr, n.wrapping_add(1));
+                    if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (cpu.mmu.read8(addr)^n^1)&0x10 == 0x10 {
+                    if (cpu.bus.read8(addr)^n^1)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -925,15 +925,15 @@ impl Cpu {
                 cycles:     12,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let n = cpu.mmu.read8(addr);
-                    cpu.mmu.write8(addr, n.wrapping_sub(1));
+                    let n = cpu.bus.read8(addr);
+                    cpu.bus.write8(addr, n.wrapping_sub(1));
                     if cpu.b == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (cpu.mmu.read8(addr)^n^1)&0x10 == 0x10 {
+                    if (cpu.bus.read8(addr)^n^1)&0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -947,7 +947,7 @@ impl Cpu {
                 cycles:     12,
                 operation:  |cpu| {
                     let n = cpu.fetch();
-                    cpu.mmu.write8(cpu.read_hl() as usize, n);
+                    cpu.bus.write8(cpu.read_hl() as usize, n);
                     Ok(())
                 },
             },
@@ -1002,7 +1002,7 @@ impl Cpu {
                 operation:  |cpu| {
                     let addr = cpu.read_hl();
                     cpu.write_hl(addr.wrapping_sub(1));
-                    cpu.a = cpu.mmu.read8(addr as usize);
+                    cpu.a = cpu.bus.read8(addr as usize);
                     Ok(())
                 },
             },
@@ -1141,7 +1141,7 @@ impl Cpu {
                 opcode:     0x46,
                 cycles:     8,
                 operation:  |cpu| {
-                    cpu.b = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.b = cpu.bus.read8(cpu.read_hl() as usize);
                     Ok(())
                 },
             },
@@ -1213,7 +1213,7 @@ impl Cpu {
                 opcode:     0x4E,
                 cycles:     8,
                 operation:  |cpu| {
-                    cpu.c = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.c = cpu.bus.read8(cpu.read_hl() as usize);
                     Ok(())
                 },
             },
@@ -1285,7 +1285,7 @@ impl Cpu {
                 opcode:     0x56,
                 cycles:     8,
                 operation:  |cpu| {
-                    cpu.d = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.d = cpu.bus.read8(cpu.read_hl() as usize);
                     Ok(())
                 },
             },
@@ -1357,7 +1357,7 @@ impl Cpu {
                 opcode:     0x5E,
                 cycles:     8,
                 operation:  |cpu| {
-                    cpu.e = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.e = cpu.bus.read8(cpu.read_hl() as usize);
                     Ok(())
                 },
             },
@@ -1429,7 +1429,7 @@ impl Cpu {
                 opcode:     0x66,
                 cycles:     8,
                 operation:  |cpu| {
-                    cpu.h = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.h = cpu.bus.read8(cpu.read_hl() as usize);
                     Ok(())
                 },
             },
@@ -1501,7 +1501,7 @@ impl Cpu {
                 opcode:     0x6E,
                 cycles:     8,
                 operation:  |cpu| {
-                    cpu.l = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.l = cpu.bus.read8(cpu.read_hl() as usize);
                     Ok(())
                 },
             },
@@ -1519,7 +1519,7 @@ impl Cpu {
                 opcode:     0x70,
                 cycles:     4,
                 operation:  |cpu| {
-                    cpu.mmu.write8(cpu.read_hl() as usize, cpu.b);
+                    cpu.bus.write8(cpu.read_hl() as usize, cpu.b);
                     Ok(())
                 },
             },
@@ -1528,7 +1528,7 @@ impl Cpu {
                 opcode:     0x71,
                 cycles:     4,
                 operation:  |cpu| {
-                    cpu.mmu.write8(cpu.read_hl() as usize, cpu.c);                    
+                    cpu.bus.write8(cpu.read_hl() as usize, cpu.c);                    
                     Ok(())
                 },
             },
@@ -1537,7 +1537,7 @@ impl Cpu {
                 opcode:     0x62,
                 cycles:     4,
                 operation:  |cpu| {
-                    cpu.mmu.write8(cpu.read_hl() as usize, cpu.d);
+                    cpu.bus.write8(cpu.read_hl() as usize, cpu.d);
                     Ok(())
                 },
             },
@@ -1546,7 +1546,7 @@ impl Cpu {
                 opcode:     0x73,
                 cycles:     4,
                 operation:  |cpu| {
-                    cpu.mmu.write8(cpu.read_hl() as usize, cpu.e);
+                    cpu.bus.write8(cpu.read_hl() as usize, cpu.e);
                     Ok(())
                 },
             },
@@ -1555,7 +1555,7 @@ impl Cpu {
                 opcode:     0x74,
                 cycles:     4,
                 operation:  |cpu| {
-                    cpu.mmu.write8(cpu.read_hl() as usize, cpu.h);
+                    cpu.bus.write8(cpu.read_hl() as usize, cpu.h);
                     Ok(())
                 },
             },
@@ -1564,7 +1564,7 @@ impl Cpu {
                 opcode:     0x75,
                 cycles:     4,
                 operation:  |cpu| {
-                    cpu.mmu.write8(cpu.read_hl() as usize, cpu.l);
+                    cpu.bus.write8(cpu.read_hl() as usize, cpu.l);
                     Ok(())
                 },
             },
@@ -1583,7 +1583,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.a);
+                    cpu.bus.write8(addr, cpu.a);
                     Ok(())
                 },
             },
@@ -1646,7 +1646,7 @@ impl Cpu {
                 opcode:     0x7E,
                 cycles:     8,
                 operation:  |cpu| {
-                    cpu.a = cpu.mmu.read8(cpu.read_hl() as usize);
+                    cpu.a = cpu.bus.read8(cpu.read_hl() as usize);
                     Ok(())
                 },
             },
@@ -1827,7 +1827,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    let n = cpu.bus.read8(cpu.read_hl() as usize);
                     cpu.a = a.wrapping_add(n);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
@@ -2050,7 +2050,7 @@ impl Cpu {
                 operation:  |cpu| {
                     let a = cpu.a;
                     let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.mmu.read8(cpu.read_hl() as usize).wrapping_add(c);
+                    let n = cpu.bus.read8(cpu.read_hl() as usize).wrapping_add(c);
                     cpu.a = a.wrapping_add(n);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
@@ -2267,7 +2267,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    let n = cpu.bus.read8(cpu.read_hl() as usize);
                     cpu.a = a.wrapping_sub(n);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
@@ -2490,7 +2490,7 @@ impl Cpu {
                 operation:  |cpu| {
                     let a = cpu.a;
                     let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.mmu.read8(cpu.read_hl() as usize).wrapping_add(c);
+                    let n = cpu.bus.read8(cpu.read_hl() as usize).wrapping_add(c);
                     cpu.a = a.wrapping_sub(n);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
@@ -2659,7 +2659,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    let n = cpu.bus.read8(cpu.read_hl() as usize);
                     cpu.a = a & n;
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
@@ -2811,7 +2811,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    let n = cpu.bus.read8(cpu.read_hl() as usize);
                     cpu.a = a ^ n;
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
@@ -2963,7 +2963,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    let n = cpu.bus.read8(cpu.read_hl() as usize);
                     cpu.a = a | n;
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
@@ -3157,7 +3157,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let n = cpu.mmu.read8(cpu.read_hl() as usize);
+                    let n = cpu.bus.read8(cpu.read_hl() as usize);
                     if  a == n {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -3526,7 +3526,7 @@ impl Cpu {
                     let lo = cpu.pop();
                     let hi = cpu.pop();
                     cpu.pc = ((hi as i16) << 8) as u16 + lo as u16;
-                    cpu.mmu.enable_irq();
+                    cpu.bus.enable_irq();
                     Ok(())
                 },
             },            
@@ -3601,7 +3601,7 @@ impl Cpu {
                 cycles:     12,
                 operation:  |cpu| {
                     let addr = 0xFF00 + (cpu.fetch16() as usize);
-                    cpu.mmu.write8(addr, cpu.a);
+                    cpu.bus.write8(addr, cpu.a);
                     Ok(())
                 },
             },
@@ -3621,7 +3621,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let addr = 0xFF00 + (cpu.c as usize);
-                    cpu.mmu.write8(addr, cpu.a);
+                    cpu.bus.write8(addr, cpu.a);
                     Ok(())
                 },
             },
@@ -3706,7 +3706,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.fetch16() as usize;
-                    cpu.mmu.write8(addr, cpu.a);
+                    cpu.bus.write8(addr, cpu.a);
                     Ok(())
                 },
             },
@@ -3749,7 +3749,7 @@ impl Cpu {
                 cycles:     12,
                 operation:  |cpu| {
                     let addr = 0xFF00 + (cpu.fetch16() as usize);
-                    cpu.a = cpu.mmu.read8(addr);
+                    cpu.a = cpu.bus.read8(addr);
                     Ok(())
                 },
             },            
@@ -3769,7 +3769,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let addr = 0xFF00 + (cpu.c as usize);
-                    cpu.a = cpu.mmu.read8(addr);
+                    cpu.a = cpu.bus.read8(addr);
                     Ok(())
                 },
             },
@@ -3778,7 +3778,7 @@ impl Cpu {
                 opcode:     0xF3,
                 cycles:     4,
                 operation:  |cpu| {
-                    cpu.mmu.disable_irq();
+                    cpu.bus.disable_irq();
                     Ok(())
                 },
             },
@@ -3861,7 +3861,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.fetch16() as usize;
-                    cpu.a = cpu.mmu.read8(addr);
+                    cpu.a = cpu.bus.read8(addr);
                     Ok(())
                 },
             },
@@ -3870,7 +3870,7 @@ impl Cpu {
                 opcode:     0xFB,
                 cycles:     4,
                 operation:  |cpu| {
-                    cpu.mmu.enable_irq();
+                    cpu.bus.enable_irq();
                     Ok(())
                 },
             },
@@ -4058,9 +4058,9 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.mmu.read8(addr) & 0x80 == 0x80;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr).rotate_left(1));
-                    if cpu.mmu.read8(addr) == 0 {
+                    let carry = cpu.bus.read8(addr) & 0x80 == 0x80;
+                    cpu.bus.write8(addr, cpu.bus.read8(addr).rotate_left(1));
+                    if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -4253,12 +4253,12 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.mmu.read8(addr) & 0x01 == 0x01;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) >> 1);
+                    let carry = cpu.bus.read8(addr) & 0x01 == 0x01;
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) >> 1);
                     if cpu.f & Flags::C == Flags::C {
-                        cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x80);
+                        cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x80);
                     }
-                    if cpu.mmu.read8(addr) == 0 {
+                    if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -4455,12 +4455,12 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.mmu.read8(addr) & 0x80 == 0x80;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) << 1);
+                    let carry = cpu.bus.read8(addr) & 0x80 == 0x80;
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) << 1);
                     if cpu.f & Flags::C == Flags::C {
-                        cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 1);
+                        cpu.bus.write8(addr, cpu.bus.read8(addr) | 1);
                     }
-                    if cpu.mmu.read8(addr) == 0 {
+                    if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -4656,12 +4656,12 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.mmu.read8(addr) & 0x01 == 0x01;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) >> 1);
+                    let carry = cpu.bus.read8(addr) & 0x01 == 0x01;
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) >> 1);
                     if cpu.f & Flags::C == Flags::C {
-                        cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x80);
+                        cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x80);
                     }
-                    if cpu.mmu.read8(addr) == 0 {
+                    if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -4840,9 +4840,9 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.mmu.read8(addr) & 0x80 == 0x80;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) << 1);
-                    if cpu.mmu.read8(addr) == 0 {
+                    let carry = cpu.bus.read8(addr) & 0x80 == 0x80;
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) << 1);
+                    if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -5017,9 +5017,9 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.mmu.read8(addr) & 0x01 == 0x01;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) >> 1);
-                    if cpu.mmu.read8(addr) == 0 {
+                    let carry = cpu.bus.read8(addr) & 0x01 == 0x01;
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) >> 1);
+                    if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -5176,10 +5176,10 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let hi = cpu.mmu.read8(addr) & 0xF0;
-                    let lo = cpu.mmu.read8(addr) & 0x0F;
-                    cpu.mmu.write8(addr, hi | lo);
-                    if cpu.mmu.read8(addr) == 0 {
+                    let hi = cpu.bus.read8(addr) & 0xF0;
+                    let lo = cpu.bus.read8(addr) & 0x0F;
+                    cpu.bus.write8(addr, hi | lo);
+                    if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -5347,9 +5347,9 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.mmu.read8(addr) & 0x01 == 0x01;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) >> 1);
-                    if cpu.mmu.read8(addr) == 0 {
+                    let carry = cpu.bus.read8(addr) & 0x01 == 0x01;
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) >> 1);
+                    if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -5481,7 +5481,7 @@ impl Cpu {
                 opcode:     0x46,
                 cycles:     16,
                 operation:  |cpu| {
-                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x01 == 0 {
+                    if cpu.bus.read8(cpu.read_hl() as usize) & 0x01 == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -5601,7 +5601,7 @@ impl Cpu {
                 opcode:     0x4E,
                 cycles:     8,
                 operation:  |cpu| {
-                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x02 == 0 {
+                    if cpu.bus.read8(cpu.read_hl() as usize) & 0x02 == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -5721,7 +5721,7 @@ impl Cpu {
                 opcode:     0x56,
                 cycles:     16,
                 operation:  |cpu| {
-                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x04 == 0 {
+                    if cpu.bus.read8(cpu.read_hl() as usize) & 0x04 == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -5841,7 +5841,7 @@ impl Cpu {
                 opcode:     0x5E,
                 cycles:     8,
                 operation:  |cpu| {
-                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x08 == 0 {
+                    if cpu.bus.read8(cpu.read_hl() as usize) & 0x08 == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -5961,7 +5961,7 @@ impl Cpu {
                 opcode:     0x66,
                 cycles:     16,
                 operation:  |cpu| {
-                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x10 == 0 {
+                    if cpu.bus.read8(cpu.read_hl() as usize) & 0x10 == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -6081,7 +6081,7 @@ impl Cpu {
                 opcode:     0x6E,
                 cycles:     8,
                 operation:  |cpu| {
-                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x20 == 0 {
+                    if cpu.bus.read8(cpu.read_hl() as usize) & 0x20 == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -6201,7 +6201,7 @@ impl Cpu {
                 opcode:     0x76,
                 cycles:     16,
                 operation:  |cpu| {
-                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x40 == 0 {
+                    if cpu.bus.read8(cpu.read_hl() as usize) & 0x40 == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -6321,7 +6321,7 @@ impl Cpu {
                 opcode:     0x7E,
                 cycles:     8,
                 operation:  |cpu| {
-                    if cpu.mmu.read8(cpu.read_hl() as usize) & 0x80 == 0 {
+                    if cpu.bus.read8(cpu.read_hl() as usize) & 0x80 == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -6406,7 +6406,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x01);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) & !0x01);
                     Ok(())
                 },
             },
@@ -6479,7 +6479,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x02);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) & !0x02);
                     Ok(())
                 },
             },
@@ -6552,7 +6552,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x04);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) & !0x04);
                     Ok(())
                 },
             },
@@ -6625,7 +6625,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x08);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) & !0x08);
                     Ok(())
                 },
             },
@@ -6698,7 +6698,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x10);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) & !0x10);
                     Ok(())
                 },
             },
@@ -6771,7 +6771,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x20);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) & !0x20);
                     Ok(())
                 },
             },
@@ -6844,7 +6844,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x40);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) & !0x40);
                     Ok(())
                 },
             },
@@ -6917,7 +6917,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) & !0x80);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) & !0x80);
                     Ok(())
                 },
             },
@@ -6990,7 +6990,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x01);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x01);
                     Ok(())
                 },
             },
@@ -7063,7 +7063,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x02);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x02);
                     Ok(())
                 },
             },
@@ -7136,7 +7136,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x04);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x04);
                     Ok(())
                 },
             },
@@ -7209,7 +7209,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x08);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x08);
                     Ok(())
                 },
             },
@@ -7282,7 +7282,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x10);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x10);
                     Ok(())
                 },
             },
@@ -7355,7 +7355,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x20);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x20);
                     Ok(())
                 },
             },
@@ -7428,7 +7428,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x40);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x40);
                     Ok(())
                 },
             },
@@ -7501,7 +7501,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    cpu.mmu.write8(addr, cpu.mmu.read8(addr) | 0x80);
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x80);
                     Ok(())
                 },
             },
@@ -7543,8 +7543,8 @@ fn test_ldbn() {
     let mut cpu = Cpu::new();
     let opcode = 0x06;
 
-    cpu.mmu.write8(0x00, opcode);
-    cpu.mmu.write8(0x01, 42);
+    cpu.bus.write8(0x00, opcode);
+    cpu.bus.write8(0x01, 42);
     cpu.tick();
     
     assert_eq!(cpu.b, 42);
@@ -7560,8 +7560,8 @@ fn test_ldr1r2() {
 
     cpu.write_hl(addr);
 
-    cpu.mmu.write8(0x00, opcode);
-    cpu.mmu.write8(addr as usize, 42);
+    cpu.bus.write8(0x00, opcode);
+    cpu.bus.write8(addr as usize, 42);
     cpu.tick();
     
     assert_eq!(cpu.a, 42);
@@ -7577,11 +7577,11 @@ fn test_push() {
     cpu.write_af(0xaadd);
     cpu.sp = 0xFF;
 
-    cpu.mmu.write8(0x00, opcode);
+    cpu.bus.write8(0x00, opcode);
     cpu.tick();
 
-    assert_eq!(cpu.mmu.read8((cpu.sp+1) as usize), 0xaa);
-    assert_eq!(cpu.mmu.read8((cpu.sp) as usize), 0xdd);
+    assert_eq!(cpu.bus.read8((cpu.sp+1) as usize), 0xaa);
+    assert_eq!(cpu.bus.read8((cpu.sp) as usize), 0xdd);
     assert_eq!(cpu.decode(opcode).to_string(), 
             "Instruction { name=\'PUSH AF\', cycles=16, opcode=0xf5 }")
 }
@@ -7595,8 +7595,8 @@ fn test_pop() {
     cpu.sp = 0xFF;
     cpu.write_bc(0xaadd);
     
-    cpu.mmu.write8(0x00, op_push);
-    cpu.mmu.write8(0x01, op_pop);
+    cpu.bus.write8(0x00, op_push);
+    cpu.bus.write8(0x01, op_pop);
     cpu.tick();
     cpu.tick();
 
@@ -7614,8 +7614,8 @@ fn test_ldhl_sp_n() {
 
     cpu.sp = 0x30;          // sp = 48
     
-    cpu.mmu.write8(0x00, opcode);   // hl = sp + n = 48 + (-6)
-    cpu.mmu.write8(0x01, n as u8);
+    cpu.bus.write8(0x00, opcode);   // hl = sp + n = 48 + (-6)
+    cpu.bus.write8(0x01, n as u8);
     cpu.tick();
 
     assert_eq!(cpu.l, 0x2A);
@@ -7630,7 +7630,7 @@ fn test_addan() {
     cpu.a = 32;
     cpu.b = 10;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a + b
+    cpu.bus.write8(0x00, opcode);   // a = a + b
     cpu.tick();
 
     assert_eq!(cpu.a, 42);
@@ -7643,7 +7643,7 @@ fn test_addan() {
     cpu.a = 0x08;
     cpu.b = 0x08;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a + b
+    cpu.bus.write8(0x00, opcode);   // a = a + b
     cpu.tick();
 
     assert_eq!(cpu.a, 0x10);
@@ -7656,7 +7656,7 @@ fn test_addan() {
     cpu.a = 0x80;
     cpu.b = 0x80;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a + b
+    cpu.bus.write8(0x00, opcode);   // a = a + b
     cpu.tick();
 
     assert_eq!(cpu.a, 0);
@@ -7674,7 +7674,7 @@ fn test_adcan() {
     cpu.b = 9;
     cpu.f.insert(Flags::C);
     
-    cpu.mmu.write8(0x00, opcode);   // a = a + b + carry flag
+    cpu.bus.write8(0x00, opcode);   // a = a + b + carry flag
     cpu.tick();
 
     assert_eq!(cpu.a, 42);
@@ -7688,7 +7688,7 @@ fn test_adcan() {
     cpu.b = 0x07;
     cpu.f.insert(Flags::C);
     
-    cpu.mmu.write8(0x00, opcode);   // a = a + b + carry flag
+    cpu.bus.write8(0x00, opcode);   // a = a + b + carry flag
     cpu.tick();
 
     assert_eq!(cpu.a, 0x10);
@@ -7702,7 +7702,7 @@ fn test_adcan() {
     cpu.b = 0x7F;
     cpu.f.insert(Flags::C);
     
-    cpu.mmu.write8(0x00, opcode);   // a = a + b + carry flag
+    cpu.bus.write8(0x00, opcode);   // a = a + b + carry flag
     cpu.tick();
 
     assert_eq!(cpu.a, 0);
@@ -7719,7 +7719,7 @@ fn test_suban() {
     cpu.a = 0x0F;
     cpu.b = 0x0F;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a - b
+    cpu.bus.write8(0x00, opcode);   // a = a - b
     cpu.tick();
 
     assert_eq!(cpu.a, 0x00);
@@ -7732,7 +7732,7 @@ fn test_suban() {
     cpu.a = 0x20;
     cpu.b = 0x12;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a - b
+    cpu.bus.write8(0x00, opcode);   // a = a - b
     cpu.tick();
 
     assert_eq!(cpu.a, 0x0E);
@@ -7745,7 +7745,7 @@ fn test_suban() {
     cpu.a = 0xE0;
     cpu.b = 0xF0;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a - b
+    cpu.bus.write8(0x00, opcode);   // a = a - b
     cpu.tick();
 
     assert_eq!(cpu.a, 0xF0);
@@ -7763,7 +7763,7 @@ fn test_sbcan() {
     cpu.b = 0x0E;
     cpu.f.insert(Flags::C);
     
-    cpu.mmu.write8(0x00, opcode);   // a = a - b - carry flag
+    cpu.bus.write8(0x00, opcode);   // a = a - b - carry flag
     cpu.tick();
 
     assert_eq!(cpu.a, 0x00);
@@ -7777,7 +7777,7 @@ fn test_sbcan() {
     cpu.b = 0x11;
     cpu.f.insert(Flags::C);
     
-    cpu.mmu.write8(0x00, opcode);   // a = a - b - carry flag
+    cpu.bus.write8(0x00, opcode);   // a = a - b - carry flag
     cpu.tick();
 
     assert_eq!(cpu.a, 0x0E);
@@ -7791,7 +7791,7 @@ fn test_sbcan() {
     cpu.b = 0xEF;
     cpu.f.insert(Flags::C);
     
-    cpu.mmu.write8(0x00, opcode);   // a = a - b - carry flag
+    cpu.bus.write8(0x00, opcode);   // a = a - b - carry flag
     cpu.tick();
 
     assert_eq!(cpu.a, 0xF0);
@@ -7808,7 +7808,7 @@ fn test_and() {
     cpu.a = 0b1111_1010;
     cpu.b = 0b0000_1111;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a & b
+    cpu.bus.write8(0x00, opcode);   // a = a & b
     cpu.tick();
 
     assert_eq!(cpu.a, 0b0000_1010);
@@ -7821,7 +7821,7 @@ fn test_or() {
     cpu.a = 0b1011_0000;
     cpu.b = 0b0000_1101;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a | b
+    cpu.bus.write8(0x00, opcode);   // a = a | b
     cpu.tick();
 
     assert_eq!(cpu.a, 0b1011_1101);
@@ -7834,7 +7834,7 @@ fn test_xor() {
     cpu.a = 0b1010_0000;
     cpu.b = 0b0000_0011;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a ^ b
+    cpu.bus.write8(0x00, opcode);   // a = a ^ b
     cpu.tick();
 
     assert_eq!(cpu.a, 0b1010_0011);
@@ -7847,7 +7847,7 @@ fn test_cp() {
     cpu.a = 0b0000_1111;
     cpu.b = 0b0000_1111;
     
-    cpu.mmu.write8(0x00, opcode);   // a == b
+    cpu.bus.write8(0x00, opcode);   // a == b
     cpu.tick();
 
     assert_eq!(cpu.a, 0b0000_1111);
@@ -7863,7 +7863,7 @@ fn test_inc() {
     let opcode = 0x3C;      // INC A
     cpu.a = 0;
     
-    cpu.mmu.write8(0x00, opcode);   // a += 1
+    cpu.bus.write8(0x00, opcode);   // a += 1
     cpu.tick();
 
     assert_eq!(cpu.a, 1);
@@ -7875,7 +7875,7 @@ fn test_dec() {
     let opcode = 0x3D;      // DEC A
     cpu.a = 0;
     
-    cpu.mmu.write8(0x00, opcode);   // a += 1
+    cpu.bus.write8(0x00, opcode);   // a += 1
     cpu.tick();
 
     assert_eq!(cpu.a, 0xFF);
@@ -7888,7 +7888,7 @@ fn test_addhln() {
     cpu.write_hl(0xFFF0);
     cpu.write_bc(0x10);
     
-    cpu.mmu.write8(0x00, opcode);   // a = hl + bc
+    cpu.bus.write8(0x00, opcode);   // a = hl + bc
     cpu.tick();
 
     assert_eq!(cpu.read_hl(), 0x00);
@@ -7900,8 +7900,8 @@ fn test_addspn() {
     let opcode = 0xE8;      // ADD SP, #
     cpu.sp = 0xFFF0;
     
-    cpu.mmu.write8(0x00, opcode);   // a = sp + #
-    cpu.mmu.write8(0x01, 0x10);
+    cpu.bus.write8(0x00, opcode);   // a = sp + #
+    cpu.bus.write8(0x01, 0x10);
     cpu.tick();
 
     assert_eq!(cpu.sp, 0x00);
@@ -7913,7 +7913,7 @@ fn test_incnn() {
     let opcode = 0x03;      // INC BC
     cpu.write_bc(0xFFF0);
     
-    cpu.mmu.write8(0x00, opcode);   // a = bc + 1
+    cpu.bus.write8(0x00, opcode);   // a = bc + 1
     cpu.tick();
 
     assert_eq!(cpu.read_bc(), 0xFFF1);
@@ -7925,7 +7925,7 @@ fn test_decnn() {
     let opcode = 0x0B;      // DEC BC
     cpu.write_bc(0xFFF0);
     
-    cpu.mmu.write8(0x00, opcode);   // a = bc - 1
+    cpu.bus.write8(0x00, opcode);   // a = bc - 1
     cpu.tick();
 
     assert_eq!(cpu.read_bc(), 0xFFEF);
@@ -7937,7 +7937,7 @@ fn test_rlca() {
     let opcode = 0x07;      // RLCA
     cpu.a = 0b1001_1001;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a.rotate_shift(1)
+    cpu.bus.write8(0x00, opcode);   // a = a.rotate_shift(1)
     cpu.tick();
 
     assert_eq!(cpu.a, 0b0011_0011);
@@ -7949,7 +7949,7 @@ fn test_rla() {
     let opcode = 0x17;      // RLA
     cpu.a = 0b1001_1001;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a.rotate_shift(1)
+    cpu.bus.write8(0x00, opcode);   // a = a.rotate_shift(1)
     cpu.tick();
 
     assert_eq!(cpu.a, 0b0011_0010);
@@ -7961,7 +7961,7 @@ fn test_rrca() {
     let opcode = 0x0F;      // RRCA
     cpu.a = 0b1001_1001;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a.rotate_right(1)
+    cpu.bus.write8(0x00, opcode);   // a = a.rotate_right(1)
     cpu.tick();
 
     assert_eq!(cpu.a, 0b1100_1100);
@@ -7973,7 +7973,7 @@ fn test_rra() {
     let opcode = 0x1F;      // RRA
     cpu.a = 0b1001_1001;
     
-    cpu.mmu.write8(0x00, opcode);   // a = a.rotate_right(1)
+    cpu.bus.write8(0x00, opcode);   // a = a.rotate_right(1)
     cpu.tick();
 
     assert_eq!(cpu.a, 0b0100_1100);
@@ -7985,8 +7985,8 @@ fn test_rlcb() {
     let opcode = 0x00;      // RLC B
     cpu.b = 0b1001_1001;
     
-    cpu.mmu.write8(0x00, 0xCB);
-    cpu.mmu.write8(0x01, opcode);   // b = b.rotate_left(1)
+    cpu.bus.write8(0x00, 0xCB);
+    cpu.bus.write8(0x01, opcode);   // b = b.rotate_left(1)
     cpu.tick();
 
     assert_eq!(cpu.b, 0b0011_0011);
@@ -7998,8 +7998,8 @@ fn test_rlb() {
     let opcode = 0x10;      // RL B
     cpu.b = 0b1001_1001;
     
-    cpu.mmu.write8(0x00, 0xCB);
-    cpu.mmu.write8(0x01, opcode);   // b = b.rotate_left(1)
+    cpu.bus.write8(0x00, 0xCB);
+    cpu.bus.write8(0x01, opcode);   // b = b.rotate_left(1)
     cpu.tick();
 
     assert_eq!(cpu.b, 0b0011_0010);
@@ -8011,8 +8011,8 @@ fn test_rrc() {
     let opcode = 0x08;      // RRC B
     cpu.b = 0b1001_1001;
     
-    cpu.mmu.write8(0x00, 0xCB);
-    cpu.mmu.write8(0x01, opcode);   // b = b.rotate_right(1)
+    cpu.bus.write8(0x00, 0xCB);
+    cpu.bus.write8(0x01, opcode);   // b = b.rotate_right(1)
     cpu.tick();
 
     assert_eq!(cpu.b, 0b0100_1100);
@@ -8024,8 +8024,8 @@ fn test_rrn() {
     let opcode = 0x18;      // RR B
     cpu.b = 0b1001_1001;
     
-    cpu.mmu.write8(0x00, 0xCB);
-    cpu.mmu.write8(0x01, opcode);   // b = b.rotate_right(1)
+    cpu.bus.write8(0x00, 0xCB);
+    cpu.bus.write8(0x01, opcode);   // b = b.rotate_right(1)
     cpu.tick();
 
     assert_eq!(cpu.b, 0b0100_1100);
@@ -8037,8 +8037,8 @@ fn test_slan() {
     let opcode = 0x18;      // SLA B
     cpu.b = 0b1001_1001;
     
-    cpu.mmu.write8(0x00, 0xCB);
-    cpu.mmu.write8(0x01, opcode);   // b = b << 1
+    cpu.bus.write8(0x00, 0xCB);
+    cpu.bus.write8(0x01, opcode);   // b = b << 1
     cpu.tick();
 
     assert_eq!(cpu.b, 0b0100_1100);
@@ -8050,8 +8050,8 @@ fn test_sran() {
     let opcode = 0x28;      // SRA B
     cpu.b = 0b1001_1001;
     
-    cpu.mmu.write8(0x00, 0xCB);
-    cpu.mmu.write8(0x01, opcode);   // b = b >> 1
+    cpu.bus.write8(0x00, 0xCB);
+    cpu.bus.write8(0x01, opcode);   // b = b >> 1
     cpu.tick();
 
     assert_eq!(cpu.b, 0b1100_1100);
@@ -8063,8 +8063,8 @@ fn test_srln() {
     let opcode = 0x38;      // SRL B
     cpu.b = 0b1001_1001;
     
-    cpu.mmu.write8(0x00, 0xCB);
-    cpu.mmu.write8(0x01, opcode);   // b = b >> 1
+    cpu.bus.write8(0x00, 0xCB);
+    cpu.bus.write8(0x01, opcode);   // b = b >> 1
     cpu.tick();
 
     assert_eq!(cpu.b, 0b0100_1100);
@@ -8076,8 +8076,8 @@ fn test_bitbr() {
     let opcode = 0x47;      // BIT 0, A
     cpu.a = 0b0000_0000;
     
-    cpu.mmu.write8(0x00, 0xCB);
-    cpu.mmu.write8(0x01, opcode);   // if b & 0x01 == 0 { Flags::Z = 0; }
+    cpu.bus.write8(0x00, 0xCB);
+    cpu.bus.write8(0x01, opcode);   // if b & 0x01 == 0 { Flags::Z = 0; }
     cpu.tick();
 
     assert_eq!(cpu.f & Flags::Z == Flags::Z, true);
@@ -8089,8 +8089,8 @@ fn test_setbr() {
     let opcode = 0xC0;      // SET 0, B
     cpu.a = 0b0000_0000;
     
-    cpu.mmu.write8(0x00, 0xCB);
-    cpu.mmu.write8(0x01, opcode);   // b |= 0x01
+    cpu.bus.write8(0x00, 0xCB);
+    cpu.bus.write8(0x01, opcode);   // b |= 0x01
     cpu.tick();
 
     assert_eq!(cpu.b, 0x01);
@@ -8102,8 +8102,8 @@ fn test_resbr() {
     let opcode = 0xA0;      // RES 4, B
     cpu.b = 0b1111_1111;
     
-    cpu.mmu.write8(0x00, 0xCB);
-    cpu.mmu.write8(0x01, opcode);   // b &= !0x10
+    cpu.bus.write8(0x00, 0xCB);
+    cpu.bus.write8(0x01, opcode);   // b &= !0x10
     cpu.tick();
 
     assert_eq!(cpu.b, 0b1110_1111);
@@ -8114,9 +8114,9 @@ fn test_jpnn() {
     let mut cpu = Cpu::new();
     let opcode = 0xC3;      // JP nn
     
-    cpu.mmu.write8(0x00, opcode);
-    cpu.mmu.write8(0x01, 0x12);
-    cpu.mmu.write8(0x02, 0x34);
+    cpu.bus.write8(0x00, opcode);
+    cpu.bus.write8(0x01, 0x12);
+    cpu.bus.write8(0x02, 0x34);
     cpu.tick();
 
     assert_eq!(cpu.pc, 0x3412);
@@ -8127,9 +8127,9 @@ fn test_jpccnn() {
     let mut cpu = Cpu::new();
     let opcode = 0xC2;      // JP NZ, nn
 
-    cpu.mmu.write8(0x00, opcode);
-    cpu.mmu.write8(0x01, 0x12);
-    cpu.mmu.write8(0x02, 0x34);
+    cpu.bus.write8(0x00, opcode);
+    cpu.bus.write8(0x01, 0x12);
+    cpu.bus.write8(0x02, 0x34);
     cpu.tick();
 
     assert_eq!(cpu.pc, 0x3412);
@@ -8142,7 +8142,7 @@ fn test_jphl() {
 
     cpu.write_hl(0x1234);
 
-    cpu.mmu.write8(0x00, opcode);
+    cpu.bus.write8(0x00, opcode);
     cpu.tick();
 
     assert_eq!(cpu.pc, 0x1234);
@@ -8155,8 +8155,8 @@ fn test_jre() {
 
     cpu.write_hl(0x1234);
 
-    cpu.mmu.write8(0x00, opcode);
-    cpu.mmu.write8(0x01, -2 as i8 as u8);
+    cpu.bus.write8(0x00, opcode);
+    cpu.bus.write8(0x01, -2 as i8 as u8);
     cpu.tick();
 
     assert_eq!(cpu.pc, 0xFFFF);
@@ -8167,8 +8167,8 @@ fn test_jrcce() {
     let mut cpu = Cpu::new();
     let opcode = 0x20;      // JR NZ e
 
-    cpu.mmu.write8(0x00, opcode);
-    cpu.mmu.write8(0x01, -2 as i8 as u8);
+    cpu.bus.write8(0x00, opcode);
+    cpu.bus.write8(0x01, -2 as i8 as u8);
     cpu.tick();
 
     assert_eq!(cpu.pc, 0xFFFF);
@@ -8180,14 +8180,14 @@ fn test_callnn() {
     let opcode = 0xCD;      // CALL nn
     cpu.sp = 0x100;
 
-    cpu.mmu.write8(0x00, opcode);
-    cpu.mmu.write8(0x01, 0x12);
-    cpu.mmu.write8(0x02, 0x34);
+    cpu.bus.write8(0x00, opcode);
+    cpu.bus.write8(0x01, 0x12);
+    cpu.bus.write8(0x02, 0x34);
     cpu.tick();
 
     assert_eq!(cpu.pc, 0x3412);
     assert_eq!(cpu.sp, 0x00FE);
-    assert_eq!(cpu.mmu.read8(cpu.sp as usize), 0x01);
+    assert_eq!(cpu.bus.read8(cpu.sp as usize), 0x01);
 }
 
 #[test]
@@ -8196,12 +8196,12 @@ fn test_rstn() {
     let opcode = 0xFF;      // RST 0x38
     cpu.sp = 0x100;
 
-    cpu.mmu.write8(0x00, opcode);
+    cpu.bus.write8(0x00, opcode);
     cpu.tick();
 
     assert_eq!(cpu.pc, 0x0038);
     assert_eq!(cpu.sp, 0x00FE);
-    assert_eq!(cpu.mmu.read16(cpu.sp as usize), 0x01);
+    assert_eq!(cpu.bus.read16(cpu.sp as usize), 0x01);
 }
 
 #[test]
@@ -8212,8 +8212,8 @@ fn test_ret() {
     cpu.sp = 0x100;
     cpu.write_bc(0x1234);
 
-    cpu.mmu.write8(0x00, opcode1);
-    cpu.mmu.write8(0x01, opcode2);
+    cpu.bus.write8(0x00, opcode1);
+    cpu.bus.write8(0x01, opcode2);
     cpu.tick();
     cpu.tick();
 
@@ -8229,8 +8229,8 @@ fn test_retcc() {
     cpu.sp = 0x100;
     cpu.write_bc(0x1234);
 
-    cpu.mmu.write8(0x00, opcode1);
-    cpu.mmu.write8(0x01, opcode2);
+    cpu.bus.write8(0x00, opcode1);
+    cpu.bus.write8(0x01, opcode2);
     cpu.tick();
     cpu.tick();
 
@@ -8246,12 +8246,12 @@ fn test_reti() {
     cpu.sp = 0x100;
     cpu.write_bc(0x1234);
 
-    cpu.mmu.write8(0x00, opcode1);
-    cpu.mmu.write8(0x01, opcode2);
+    cpu.bus.write8(0x00, opcode1);
+    cpu.bus.write8(0x01, opcode2);
     cpu.tick();
     cpu.tick();
 
     assert_eq!(cpu.pc, 0x1234);
     assert_eq!(cpu.sp, 0x0100);
-    assert_eq!(cpu.mmu.read8(0xFFFF as usize), 0b11111)
+    assert_eq!(cpu.bus.read8(0xFFFF as usize), 0b11111)
 }
