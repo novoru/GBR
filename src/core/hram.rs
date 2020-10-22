@@ -1,20 +1,20 @@
 use crate::core::io::Io;
 
-const RAM_SIZE: usize   = 8192;
+const HRAM_SIZE: usize   = 128;
 
-pub struct Ram {
-    ram:    [u8; RAM_SIZE],
+pub struct HRam {
+    ram:    [u8; HRAM_SIZE],
 }
 
-impl Ram {
+impl HRam {
     pub fn new() -> Self {
-        Ram {
-            ram:    [0; RAM_SIZE]
+        HRam {
+            ram:    [0; HRAM_SIZE]
         }
     }
 }
 
-impl Io for Ram {
+impl Io for HRam {
     fn read8(&self, addr: usize) -> u8 {
         self.ram[addr]
     }

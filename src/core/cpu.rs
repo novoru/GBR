@@ -1,10 +1,12 @@
 #[macro_use]
 use bitflags::*;
 use std::fmt;
+use std::path::Path;
 
 use crate::core::io::Io;
 use crate::core::bus::Bus;
-use crate::core::cartridge::Cartridge;
+use crate::core::pad::Key;
+use crate::core::ppu::*;
 
 bitflags! {
     struct Flags: u8 {
@@ -61,11 +63,44 @@ impl Cpu {
             bus:    Bus::no_cartridge(),
         }
     }
+    
+    pub fn from_path(path: &Path) -> Self {
+        Cpu {
+            a:      0,
+            b:      0,
+            d:      0,
+            h:      0,
+            c:      0,
+            e:      0,
+            l:      0,
+            f:      Flags::empty(),
+            sp:     0,
+            pc:     0,
+            bus:    Bus::from_path(path),
+        }
+    }
 
     pub fn tick(&mut self) {
+        self.bus.transfer();
         let opcode = self.fetch();
         let inst = self.decode(opcode);
         self.execute(&inst);
+        self.bus.tick();
+        // if self.pc == 0x1AC {
+        //     println!("finish init");
+        // }
+    }
+
+    pub fn key_push(&mut self, key: Key) {
+        self.bus.key_push(key);
+    }
+
+    pub fn key_release(&mut self, key: Key) {
+        self.bus.key_release(key);
+    }
+
+    pub fn get_pixels(&self) -> [u8; SCREEN_WIDTH*SCREEN_HEIGHT] {
+        self.bus.get_pixels()
     }
 
     fn fetch(&mut self) -> u8 {
@@ -247,7 +282,8 @@ impl Cpu {
                 cycles:     20,
                 operation:  |cpu| {
                     let addr = cpu.fetch16() as usize;
-                    cpu.bus.write16(addr, cpu.sp);
+                    cpu.bus.write8(addr, (cpu.sp&0xFF) as u8);
+                    cpu.bus.write8(addr+1, (cpu.sp >> 8) as u8);
                     Ok(())
                 },
             },
@@ -487,7 +523,8 @@ impl Cpu {
                 opcode:     0x18,
                 cycles:     8,
                 operation:  |cpu| {
-                    cpu.pc = (cpu.pc as i16 + (cpu.fetch() as i8 as i16)) as u16;
+                    let e = cpu.fetch() as i8 as i16;
+                    cpu.pc = (cpu.pc as i16 + e) as u16;
                     Ok(())
                 },
             },
@@ -610,12 +647,13 @@ impl Cpu {
                 },
             },
             0x20    =>  Instruction {
-                name:       "JP NZ, e",
+                name:       "JR NZ, e",
                 opcode:     0x20,
                 cycles:     8,
                 operation:  |cpu| {
+                    let e = cpu.fetch() as i8 as i16;
                     if cpu.f & Flags::Z != Flags::Z {
-                        cpu.pc = (cpu.pc as i16 + (cpu.fetch() as i8 as i16)) as u16;
+                        cpu.pc = (cpu.pc as i16 + e) as u16;
                     }
                     Ok(())
                 },
@@ -739,12 +777,13 @@ impl Cpu {
                 },
             },
             0x28    =>  Instruction {
-                name:       "JP Z, e",
+                name:       "JR Z, e",
                 opcode:     0x28,
                 cycles:     8,
                 operation:  |cpu| {
+                    let e = cpu.fetch() as i8 as i16;
                     if cpu.f & Flags::Z == Flags::Z {
-                        cpu.pc = (cpu.pc as i16 + (cpu.fetch() as i8 as i16)) as u16;
+                        cpu.pc = (cpu.pc as i16 + e) as u16;
                     }
                     Ok(())
                 },
@@ -856,12 +895,13 @@ impl Cpu {
                 },
             },
             0x30    =>  Instruction {
-                name:       "JP NC, e",
+                name:       "JR NC, e",
                 opcode:     0x30,
                 cycles:     8,
                 operation:  |cpu| {
+                    let e = cpu.fetch() as i8 as i16;
                     if cpu.f & Flags::C != Flags::C {
-                        cpu.pc = (cpu.pc as i16 + (cpu.fetch() as i8 as i16)) as u16;
+                        cpu.pc = (cpu.pc as i16 + e) as u16;
                     }
                     Ok(())
                 },
@@ -962,12 +1002,13 @@ impl Cpu {
                 },
             },
             0x38    =>  Instruction {
-                name:       "JP C, e",
+                name:       "JR C, e",
                 opcode:     0x38,
                 cycles:     8,
                 operation:  |cpu| {
+                    let e = cpu.fetch() as i8 as i16;
                     if cpu.f & Flags::C == Flags::C {
-                        cpu.pc = (cpu.pc as i16 + (cpu.fetch() as i8 as i16)) as u16;
+                        cpu.pc = (cpu.pc as i16 + e) as u16;
                     }
                     Ok(())
                 },
@@ -3250,10 +3291,15 @@ impl Cpu {
                 opcode:     0xC4,
                 cycles:     12,
                 operation:  |cpu| {
+                    let lo = cpu.bus.read8(cpu.pc as usize);
+                    cpu.pc += 1;
+                    let hi = cpu.bus.read8(cpu.pc as usize);
+                    cpu.pc += 1;
+                    let nn = ((hi as u16) << 8) | lo as u16;
                     if cpu.f & Flags::Z != Flags::Z {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
-                        cpu.pc = cpu.fetch16();
+                        cpu.pc = nn;
                     }
                     Ok(())
                 },
@@ -3350,10 +3396,15 @@ impl Cpu {
                 opcode:     0xCC,
                 cycles:     12,
                 operation:  |cpu| {
+                    let lo = cpu.bus.read8(cpu.pc as usize);
+                    cpu.pc += 1;
+                    let hi = cpu.bus.read8(cpu.pc as usize);
+                    cpu.pc += 1;
+                    let nn = ((hi as u16) << 8) | lo as u16;
                     if cpu.f & Flags::Z == Flags::Z {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
-                        cpu.pc = cpu.fetch16();
+                        cpu.pc = nn;
                     }
                     Ok(())
                 },
@@ -3363,9 +3414,14 @@ impl Cpu {
                 opcode:     0xCD,
                 cycles:     12,
                 operation:  |cpu| {
+                    let lo = cpu.bus.read8(cpu.pc as usize);
+                    cpu.pc += 1;
+                    let hi = cpu.bus.read8(cpu.pc as usize);
+                    cpu.pc += 1;
+                    let nn = ((hi as u16) << 8) | lo as u16;
                     cpu.push((cpu.pc >> 8) as u8);
                     cpu.push((cpu.pc & 0xFF) as u8);
-                    cpu.pc = cpu.fetch16();
+                    cpu.pc = nn;
                     Ok(())
                 },
             },
@@ -3448,10 +3504,15 @@ impl Cpu {
                 opcode:     0xD4,
                 cycles:     12,
                 operation:  |cpu| {
+                    let lo = cpu.bus.read8(cpu.pc as usize);
+                    cpu.pc += 1;
+                    let hi = cpu.bus.read8(cpu.pc as usize);
+                    cpu.pc += 1;
+                    let nn = ((hi as u16) << 8) | lo as u16;
                     if cpu.f & Flags::C != Flags::C {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
-                        cpu.pc = cpu.fetch16();
+                        cpu.pc = nn;
                     }
                     Ok(())
                 },
@@ -3546,10 +3607,15 @@ impl Cpu {
                 opcode:     0xDC,
                 cycles:     12,
                 operation:  |cpu| {
+                    let lo = cpu.bus.read8(cpu.pc as usize);
+                    cpu.pc += 1;
+                    let hi = cpu.bus.read8(cpu.pc as usize);
+                    cpu.pc += 1;
+                    let nn = ((hi as u16) << 8) | lo as u16;
                     if cpu.f & Flags::C == Flags::C {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
-                        cpu.pc = cpu.fetch16();
+                        cpu.pc = nn;
                     }
                     Ok(())
                 },
@@ -3599,7 +3665,7 @@ impl Cpu {
                 opcode:     0xE0,
                 cycles:     12,
                 operation:  |cpu| {
-                    let addr = 0xFF00 + (cpu.fetch16() as usize);
+                    let addr = 0xFF00 + (cpu.fetch() as usize);
                     cpu.bus.write8(addr, cpu.a);
                     Ok(())
                 },
@@ -3747,7 +3813,7 @@ impl Cpu {
                 opcode:     0xF0,
                 cycles:     12,
                 operation:  |cpu| {
-                    let addr = 0xFF00 + (cpu.fetch16() as usize);
+                    let addr = 0xFF00 + (cpu.fetch() as usize);
                     cpu.a = cpu.bus.read8(addr);
                     Ok(())
                 },
@@ -3913,7 +3979,7 @@ impl Cpu {
                 },
             },
 
-            _       =>  unimplemented!("can't decode: 0x{:02x}", opcode),
+            _       =>  unimplemented!("can't decode: 0x{:02x}\ncpu={}", opcode, self),
         }
     }
 
@@ -8158,7 +8224,7 @@ fn test_jre() {
     cpu.bus.write8(0x01, -2 as i8 as u8);
     cpu.tick();
 
-    assert_eq!(cpu.pc, 0xFFFF);
+    assert_eq!(cpu.pc, 0x00);
 }
 
 #[test]
@@ -8170,7 +8236,7 @@ fn test_jrcce() {
     cpu.bus.write8(0x01, -2 as i8 as u8);
     cpu.tick();
 
-    assert_eq!(cpu.pc, 0xFFFF);
+    assert_eq!(cpu.pc, 0x00);
 }
 
 #[test]
@@ -8186,7 +8252,7 @@ fn test_callnn() {
 
     assert_eq!(cpu.pc, 0x3412);
     assert_eq!(cpu.sp, 0x00FE);
-    assert_eq!(cpu.bus.read8(cpu.sp as usize), 0x01);
+    assert_eq!(cpu.bus.read8(cpu.sp as usize), 0x03);
 }
 
 #[test]
@@ -8200,7 +8266,10 @@ fn test_rstn() {
 
     assert_eq!(cpu.pc, 0x0038);
     assert_eq!(cpu.sp, 0x00FE);
-    assert_eq!(cpu.bus.read16(cpu.sp as usize), 0x01);
+    let lo = cpu.bus.read8(cpu.sp as usize) as u16;
+    let hi = (cpu.bus.read8((cpu.sp+1) as usize) as u16) << 8 ;
+    assert_eq!(hi | lo, 0x01);
+    // assert_eq!(cpu.bus.read16(cpu.sp as usize), 0x01);
 }
 
 #[test]

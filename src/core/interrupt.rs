@@ -63,19 +63,11 @@ impl Io for Interrupt {
         }
     }
 
-    fn read16(&self, addr: usize) -> u16 {
-        panic!("can't read from: {:04x}", addr)
-    }
-
     fn write8(&mut self, addr: usize, data: u8) {
         match addr {
             0xFF0F    =>  self.irqf = If::from_bits_truncate(data),
             0xFFFF    =>  self.irqe = Ie::from_bits_truncate(data),
             _       =>  panic!("can't write to: {:04x}", addr),
         }
-    }
-    
-    fn write16(&mut self, addr: usize, _data: u16) {
-        panic!("can't write to: {:04x}", addr)
     }
 }
