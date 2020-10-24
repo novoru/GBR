@@ -7,3 +7,5 @@ pub mod interrupt;
 pub mod pad;
 pub mod ppu;
 pub mod hram;
+pub mod apu;
+pub mod mbc;

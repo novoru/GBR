@@ -5,6 +5,7 @@ use crate::core::interrupt::*;
 use crate::core::pad::{ Pad, Key };
 use crate::core::ppu::*;
 use crate::core::hram::HRam;
+use crate::core::apu::Apu;
 
 use std::path::Path;
 
@@ -16,6 +17,7 @@ pub struct Bus {
     ram:        Ram,
     hram:       HRam,
     ppu:        Ppu,
+    apu:        Apu,
     interrupt:  Interrupt,
     pad:        Pad,
 }
@@ -27,6 +29,7 @@ impl Bus {
             ram:        Ram::new(),
             hram:       HRam::new(),
             ppu:        Ppu::new(),
+            apu:        Apu::new(),
             interrupt:  Interrupt::new(),
             pad:        Pad::new(),
         }
@@ -38,6 +41,7 @@ impl Bus {
             ram:        Ram::new(),
             hram:       HRam::new(),
             ppu:        Ppu::new(),
+            apu:        Apu::new(),
             interrupt:  Interrupt::new(),
             pad:        Pad::new(),
         }
@@ -104,14 +108,14 @@ impl Io for Bus {
             // Interrupt Flag Register
             0xFF0F              =>  self.interrupt.read8(addr),
             // LCD Registers
-            0xFF40 ..= 0xFF4B    =>  self.ppu.read8(addr),
+            0xFF40 ..= 0xFF4B   => self.ppu.read8(addr),
             // Empty but unusable for I/O
             0xFF4C ..= 0xFF7F   =>  panic!("unsupport read at {:04x}", addr),
             // Internal RAM
             0xFF80 ..= 0xFFFE   =>  self.hram.read8(addr&0x7F),
             // Interrupt Enable Register
             0xFFFF              =>  self.interrupt.read8(addr),
-            _                   =>  unimplemented!("0x{:08x}", addr),
+            _                   =>  unimplemented!("0x{:04x}", addr),
         }
     }
 
@@ -132,21 +136,30 @@ impl Io for Bus {
             // Sprite Attribute Memory (OAM)
             0xFE00 ..= 0xFE9F   =>  self.ppu.write8(addr, data),
             // Empty but unusable for I/O
-            0xFEA0 ..= 0xFEFF   =>  panic!("unsupport write at {:04x}", addr),
+            0xFEA0 ..= 0xFEFF   =>  (),
             // I/O ports
-            0xFF00              =>  self.pad.write8(data),            
-            // 0xFF00 ..= 0xFF3B   =>  self.ioports.write8(addr),
+            0xFF00              =>  self.pad.write8(data),         
+            // Sound Channel 1 - Tone & Sweep
+            0xFF10 ..= 0xFF14   |
+            // Sound Channel 2 - Tone
+            0xFF16 ..= 0xFF19   |
+            // Sound Channel 3 - Wave Output
+            0xFF1A ..= 0xFF1E   |
+            // Sound Channel 4 - Noise
+            0xFF20 ..= 0xFF26   |
+            // Wabe Pattern RAM
+            0xFF30 ..= 0xFF3F   =>  self.apu.write8(addr, data),
             // Interrupt Flag Register
             0xFF0F              =>  self.interrupt.write8(addr, data),
             // LCD Registers
-            0xFF40 ..= 0xFF4B    =>  self.ppu.write8(addr, data),
+            0xFF40 ..= 0xFF4B   =>  self.ppu.write8(addr, data),
             // Empty but unusable for I/O
-            0xFF4C ..= 0xFF7F   =>  panic!("unsupport write at {:04x}", addr),
+            0xFF4C ..= 0xFF7F   =>  (),
             // Internal RAM
             0xFF80 ..= 0xFFFE   =>  self.hram.write8(addr&0x7F, data),
             // Interrupt Enable Register
             0xFFFF              =>  self.interrupt.write8(addr, data),
-            _                   =>  unimplemented!("0x{:08x}", addr),
+            _                   =>  (),
         }
     }
 }

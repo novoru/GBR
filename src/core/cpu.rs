@@ -86,9 +86,6 @@ impl Cpu {
         let inst = self.decode(opcode);
         self.execute(&inst);
         self.bus.tick();
-        // if self.pc == 0x1AC {
-        //     println!("finish init");
-        // }
     }
 
     pub fn key_push(&mut self, key: Key) {

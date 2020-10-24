@@ -56,7 +56,7 @@ impl MainWindow {
 
 impl EventHandler for MainWindow {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        for _ in 0..153 {
+        for _ in 0..4000 {
             self.cpu.tick();
             self.update_pixels(self.cpu.get_pixels());
         }

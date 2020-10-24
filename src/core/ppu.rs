@@ -113,9 +113,8 @@ enum PpuMode {
 pub const SCREEN_WIDTH:     usize   = 160;
 pub const SCREEN_HEIGHT:    usize   = 144;
 const LCD_BLANK_HEIGHT: u8 = 10;
-const VRAM_SIZE:        usize   = 8192;
+// const VRAM_SIZE:        usize   = 8192;
 const OAM_SPRITES:      usize   = 40;
-const FIFO_SIZE:        usize   = 8;
 const LCDC_ADDR:        usize   = 0xFF40;
 const STAT_ADDR:        usize   = 0xFF41;
 const CYCLE_PER_LINE: u16 = 456;
@@ -150,7 +149,7 @@ impl Io for Ppu {
             // 8kB Video RAM
             0x8000 ..= 0x9FFF   =>  self.vram.read8(addr&0x1FFF),
             // Sprite Attribute Memory (OAM)
-            0xFE00 ..= 0xFE9F   =>  self.oam[addr&0xFF].read8(addr),
+            0xFE00 ..= 0xFE9F   =>  self.oam[(addr&0xFF)/4].read8(addr%4),
             // Registers
             0xFF40  =>  self.lcdc.bits,
             0xFF41  =>  self.stat.bits,
@@ -177,7 +176,7 @@ impl Io for Ppu {
             // 8kB Video RAM
             0x8000 ..= 0x9FFF   =>  self.vram.write8(addr&0x1FFF, data),
             // Sprite Attribute Memory (OAM)
-            0xFE00 ..= 0xFE9F   =>  self.oam[addr&0xFF].write8(addr, data),
+            0xFE00 ..= 0xFE9F   =>  self.oam[(addr&0xFF)/4].write8(addr%4, data),
             // Registers
             0xFF40  =>  self.lcdc   = Lcdc::from_bits_truncate(data),
             0xFF41  =>  self.stat   = Stat::from_bits_truncate(data),
@@ -284,7 +283,7 @@ impl Ppu {
         }
     }
 
-    fn mode(&self) -> PpuMode {
+    fn _mode(&self) -> PpuMode {
         match self.read8(STAT_ADDR) & 0x03 {
             0x00    =>  PpuMode::HBlank,
             0x01    =>  PpuMode::VBlank,
@@ -358,6 +357,10 @@ impl Ppu {
         self.read8(addr)
     }
 
+    fn get_bg_paletteid(&self) -> u8 {
+        0
+    }
+
     fn get_color(&self, tileid: u8, x: u8, y: u8) -> u8 {
         let addr = tileid as usize * 0x10 + self.tiledata_offset();
         let mut pixels = Vec::new();
@@ -366,9 +369,9 @@ impl Ppu {
             let line1 = self.read8(addr+i*2);
             let line2 = self.read8(addr+i*2+1);
             for j in 0..8 {
-                let msb = line1 >> (7-j) & 0x01;
-                let lsb = line2 >> (7-j) & 0x01;
-                pixels.push(msb<<1+lsb);
+                let msb = (line1 >> (7-j)) & 0x01;
+                let lsb = (line2 >> (7-j)) & 0x01;
+                pixels.push((msb<<1)+lsb);
             }
         }
 
@@ -417,7 +420,7 @@ impl Io for Oam {
             0x01    =>  self.x,
             0x02    =>  self.tile,
             0x03    =>  self.flags.bits,
-            _       =>  panic!(),
+            _       =>  panic!("unsupport read at {:04x}", addr),
         }
     }
 
@@ -427,7 +430,7 @@ impl Io for Oam {
             0x01    =>  self.x = data,
             0x02    =>  self.tile = data,
             0x03    =>  self.flags = OamFlags::from_bits_truncate(data),
-            _       =>  panic!(),
+            _       =>  panic!("unsupport write at {:04x}", addr),
         }
     }
 }
