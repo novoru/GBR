@@ -115,6 +115,7 @@ pub const SCREEN_HEIGHT:    usize   = 144;
 const LCD_BLANK_HEIGHT: u8 = 10;
 // const VRAM_SIZE:        usize   = 8192;
 const OAM_SPRITES:      usize   = 40;
+const OAM_OFFSET:       usize   = 0xFE00;
 const LCDC_ADDR:        usize   = 0xFF40;
 const STAT_ADDR:        usize   = 0xFF41;
 const CYCLE_PER_LINE: u16 = 456;
@@ -230,7 +231,7 @@ impl Ppu {
     }
 
     pub fn tick(&mut self) {
-        self.clock += 1;
+        self.clock += 4;
         if !self.lcdc.contains(Lcdc::LCD_EN) {
             return;
         }
@@ -239,12 +240,14 @@ impl Ppu {
 
         if self.clock >= CYCLE_PER_LINE {
             if self.ly == SCREEN_HEIGHT as u8 {
-
+                if self.sprite_on() {
+                    self.build_sprite();
+                }
             } else if self.ly >= SCREEN_HEIGHT as u8 + LCD_BLANK_HEIGHT {
                 self.ly = 0;
-                self.draw_line();
+                self.build_bg();
             } else if self.ly < SCREEN_HEIGHT as u8 {
-                self.draw_line();
+                self.build_bg();
                 // if self.window_enabled() {
                     // self.build_window_tile();
                 // }
@@ -326,17 +329,15 @@ impl Ppu {
         }
     }
 
-    fn _search_oam(&mut self) {
-        // Find visible sprites
-        /*
-        oam.x != 0
-        LY + 16 >= oam.y
-        LY + 16 <  o am.y + h
-        */
+    fn sprite_size(&self) -> u8 {
+        match self.lcdc.contains(Lcdc::OBJ_SIZE) {
+            true    =>  8,
+            false   =>  16,
+        }
     }
 
-    fn draw_line(&mut self) {
-        self.build_bg();
+    fn sprite_on(&self) -> bool {
+        self.lcdc.contains(Lcdc::OBJ_EN)
     }
 
     fn build_bg(&mut self) {
@@ -352,13 +353,43 @@ impl Ppu {
         }
     }
 
+    fn build_sprite(&mut self) {
+        for attr in self.oam.iter() {
+            if attr.x == 0x50 {
+                println!("{:?}", attr);
+            }
+            let height = self.sprite_size();
+            for x in 0..8 as u8 {
+                for y in 0.. height {
+                    if  x.wrapping_add(attr.offsetx()) == 0 ||
+                        x.wrapping_add(attr.offsetx()) >= SCREEN_WIDTH as u8 {
+                        continue;
+                    }
+                    if y.wrapping_add(attr.offsety()) == 0 ||
+                       y.wrapping_add(attr.offsety()) >= SCREEN_HEIGHT as u8 {
+                        continue;
+                    }
+
+                    let mut posx = x;
+                    let mut posy = y;
+                    if attr.is_xflip() {
+                        posx = 7 - x;
+                    }
+                    if attr.is_yflip() {
+                        posy = 7 - y;
+                    }
+                    let color = self.get_color(attr.tileid(), x%8, y%8);
+                    let base = posx.wrapping_add(attr.offsetx()) as usize
+                                + (posy.wrapping_add(attr.offsety()) as usize * SCREEN_WIDTH);
+                    self.pixels[base] = color;
+                }
+            }
+        }
+    }
+
     fn get_tileid(&self, index: u16) -> u8 {
         let addr = index as usize + self.bg_tilemap_offset();
         self.read8(addr)
-    }
-
-    fn get_bg_paletteid(&self) -> u8 {
-        0
     }
 
     fn get_color(&self, tileid: u8, x: u8, y: u8) -> u8 {
@@ -410,6 +441,26 @@ impl Oam {
             tile:   0,
             flags:  OamFlags::empty(),
         }
+    }
+
+    pub fn is_xflip(&self) -> bool {
+        self.flags.contains(OamFlags::XFLIP)
+    }
+    
+    pub fn is_yflip(&self) -> bool {
+        self.flags.contains(OamFlags::YFLIP)
+    }
+
+    pub fn tileid(&self) -> u8 {
+        self.tile
+    }
+
+    pub fn offsetx(&self) -> u8 {
+        self.x.wrapping_sub(8)
+    }
+    
+    pub fn offsety(&self) -> u8 {
+        self.y.wrapping_sub(16)
     }
 }
 

@@ -67,7 +67,7 @@ impl Bus {
         self.ppu.get_pixels()
     }
 
-    pub fn transfer(&mut self) {
+    pub fn transfer(&mut self) -> bool {
         if self.ppu.dma_started() {
             for i in 0..0xA0 {
                 let addr = (self.read8(DMA_START_ADDR) as usize * 0x100 + i) as usize;
@@ -75,7 +75,10 @@ impl Bus {
                 self.write8(OAM_START_ADDR + i, data);
             }
             self.ppu.stop_dma();
+            
+            return true;
         }
+        false
     }
 
     pub fn tick(&mut self) {

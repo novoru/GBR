@@ -58,8 +58,8 @@ impl Cpu {
             e:      0,
             l:      0,
             f:      Flags::empty(),
-            sp:     0,
-            pc:     0,
+            sp:     0xFFFE,
+            pc:     0x100,
             bus:    Bus::no_cartridge(),
         }
     }
@@ -74,17 +74,18 @@ impl Cpu {
             e:      0,
             l:      0,
             f:      Flags::empty(),
-            sp:     0,
-            pc:     0,
+            sp:     0xFFFE,
+            pc:     0x100,
             bus:    Bus::from_path(path),
         }
     }
 
     pub fn tick(&mut self) {
-        self.bus.transfer();
-        let opcode = self.fetch();
-        let inst = self.decode(opcode);
-        self.execute(&inst);
+        if !self.bus.transfer() {
+            let opcode = self.fetch();
+            let inst = self.decode(opcode);
+            self.execute(&inst);
+        }
         self.bus.tick();
     }
 
