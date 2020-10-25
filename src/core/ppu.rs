@@ -3,6 +3,7 @@ use bitflags::*;
 
 use crate::core::io::Io;
 use crate::core::ram::Ram;
+use crate::core::interrupt::InterruptKind;
 
 bitflags! {
     struct Lcdc: u8 {
@@ -230,18 +231,25 @@ impl Ppu {
         self.pixels
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self) -> (Option<InterruptKind>, Option<InterruptKind>) {
         self.clock += 4;
         if !self.lcdc.contains(Lcdc::LCD_EN) {
-            return;
+            return (None, None);
         }
 
         self.update_mode();
+
+        let mut vblank_irq = false;
+        let mut lcdc_irq = false;
 
         if self.clock >= CYCLE_PER_LINE {
             if self.ly == SCREEN_HEIGHT as u8 {
                 if self.sprite_on() {
                     self.build_sprite();
+                    vblank_irq = true;
+                    if self.stat.contains(Stat::INTR_LYC) {
+                        lcdc_irq = true;
+                    }
                 }
             } else if self.ly >= SCREEN_HEIGHT as u8 + LCD_BLANK_HEIGHT {
                 self.ly = 0;
@@ -255,12 +263,22 @@ impl Ppu {
 
             if self.ly == self.lyc {
                 self.stat.insert(Stat::LYC_STAT);
+                lcdc_irq = true;
             } else {
                 self.stat.remove(Stat::MODE_FLAG1);
                 self.stat.remove(Stat::MODE_FLAG0);
             }
             self.ly += 1;
             self.clock -= CYCLE_PER_LINE;
+        }
+
+        match (vblank_irq, lcdc_irq) {
+            (false, false)  =>  (None, None),
+            (false, true)   =>  (Some(InterruptKind::Vblank),
+                                 Some(InterruptKind::LcdcStatus)),
+            (true, false)   =>  (Some(InterruptKind::Vblank), None),
+            (true, true)    =>  (Some(InterruptKind::Vblank),
+                                 Some(InterruptKind::LcdcStatus)),
         }
     }
 
@@ -331,8 +349,8 @@ impl Ppu {
 
     fn sprite_size(&self) -> u8 {
         match self.lcdc.contains(Lcdc::OBJ_SIZE) {
-            true    =>  8,
-            false   =>  16,
+            false   =>  8,
+            true    =>  16,
         }
     }
 
@@ -355,9 +373,6 @@ impl Ppu {
 
     fn build_sprite(&mut self) {
         for attr in self.oam.iter() {
-            if attr.x == 0x50 {
-                println!("{:?}", attr);
-            }
             let height = self.sprite_size();
             for x in 0..8 as u8 {
                 for y in 0.. height {

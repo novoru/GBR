@@ -48,11 +48,23 @@ impl Bus {
     }
 
     pub fn enable_irq(&mut self) {
-        self.interrupt.enable()
+        self.interrupt.enable();
+    }
+    
+    pub fn disable_irq(&mut self) {
+        self.interrupt.disable();
     }
 
-    pub fn disable_irq(&mut self) {
-        self.interrupt.disable()
+    pub fn is_enabled_irq(&self) -> bool {
+        self.interrupt.is_enabled_irq()
+    }
+
+    pub fn isr_addr(&self) -> Option<usize> {
+        self.interrupt.isr_addr()
+    }
+
+    pub fn has_irq(&self) -> bool {
+        self.interrupt.has_irq()
     }
 
     pub fn key_push(&mut self, key: Key) {
@@ -75,14 +87,23 @@ impl Bus {
                 self.write8(OAM_START_ADDR + i, data);
             }
             self.ppu.stop_dma();
-            
+
             return true;
         }
         false
     }
 
     pub fn tick(&mut self) {
-        self.ppu.tick();
+        match self.ppu.tick() {
+            (Some(_), Some(_))  =>  {
+                self.interrupt.set_irq(InterruptKind::Vblank);
+                self.interrupt.set_irq(InterruptKind::LcdcStatus);
+            },
+            (Some(_), None)     =>  {
+                self.interrupt.set_irq(InterruptKind::Vblank);
+            },
+            _                   =>  (),
+        }
     }
 }
 

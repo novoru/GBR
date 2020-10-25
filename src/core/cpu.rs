@@ -82,9 +82,7 @@ impl Cpu {
 
     pub fn tick(&mut self) {
         if !self.bus.transfer() {
-            let opcode = self.fetch();
-            let inst = self.decode(opcode);
-            self.execute(&inst);
+            self.step();
         }
         self.bus.tick();
     }
@@ -99,6 +97,26 @@ impl Cpu {
 
     pub fn get_pixels(&self) -> [u8; SCREEN_WIDTH*SCREEN_HEIGHT] {
         self.bus.get_pixels()
+    }
+
+    fn step(&mut self) {
+        if self.bus.has_irq() && self.bus.is_enabled_irq() {
+            self.resolve_irq();
+            return;
+        }
+        let opcode = self.fetch();
+        let inst = self.decode(opcode);
+        self.execute(&inst);
+    }
+
+    fn resolve_irq(&mut self) {
+        let pc = self.pc;
+        self.push((pc>>8) as u8);
+        self.push((pc&0xFF) as u8);
+        let addr = self.bus.isr_addr();
+
+        self.pc = addr.unwrap() as u16;
+        self.bus.disable_irq();
     }
 
     fn fetch(&mut self) -> u8 {
