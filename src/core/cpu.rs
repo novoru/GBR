@@ -34,15 +34,16 @@ pub struct Cpu {
     sp:     u16,
     pc:     u16,
     bus:    Bus,
+    debug:  bool,
 }
 
 impl fmt::Display for Cpu {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Cpu {{\n\ta = 0x{:02x}\n\tb = 0x{:02x}\n\td = 0x{:02x}\n\th = 0x{:02x}\n\
-                           \tc = 0x{:02x}\n\te = 0x{:02x}\n\tl = 0x{:02x}\n\tf = 0x{:02x}\n\
-                           \tsp= 0x{:04x}\n\tpc= 0x{:04x}\n}}",
-            self.a, self.b, self.d, self.h,
-            self.c, self.e, self.l, self.f,
+        write!(f, "Cpu {{\n\taf= 0x{:02x}{:02x}\n\tbc= 0x{:02x}{:02x}\n\
+                           \tde= 0x{:02x}{:02x}\n\thl= 0x{:02x}{:02x}\n\
+                           \tsp= 0x{:04x}\n\tpc= 0x{:04x}\n}}\n\
+                           \t",
+            self.a, self.f, self.b, self.c, self.d, self.e, self.h, self.l,
             self.sp, self.pc)
     }
 }
@@ -50,33 +51,35 @@ impl fmt::Display for Cpu {
 impl Cpu {
     pub fn new() -> Self {
         Cpu {
-            a:      0,
-            b:      0,
-            d:      0,
-            h:      0,
-            c:      0,
-            e:      0,
-            l:      0,
-            f:      Flags::empty(),
+            a:      0x01,
+            b:      0x00,
+            d:      0x00,
+            h:      0x01,
+            c:      0x13,
+            e:      0xD8,
+            l:      0x4D,
+            f:      Flags::Z | Flags::N | Flags::H | Flags::C,
             sp:     0xFFFE,
             pc:     0x100,
             bus:    Bus::no_cartridge(),
+            debug:  false,
         }
     }
     
     pub fn from_path(path: &Path) -> Self {
         Cpu {
-            a:      0,
-            b:      0,
-            d:      0,
-            h:      0,
-            c:      0,
-            e:      0,
-            l:      0,
-            f:      Flags::empty(),
+            a:      0x01,
+            b:      0x00,
+            d:      0x00,
+            h:      0x01,
+            c:      0x13,
+            e:      0xD8,
+            l:      0x4D,
+            f:      Flags::Z | Flags::N | Flags::H | Flags::C,
             sp:     0xFFFE,
             pc:     0x100,
             bus:    Bus::from_path(path),
+            debug:  false,
         }
     }
 
@@ -87,12 +90,12 @@ impl Cpu {
         self.bus.tick();
     }
 
-    pub fn key_push(&mut self, key: Key) {
-        self.bus.key_push(key);
+    pub fn push_key(&mut self, key: Key) {
+        self.bus.push_key(key);
     }
 
-    pub fn key_release(&mut self, key: Key) {
-        self.bus.key_release(key);
+    pub fn release_key(&mut self, key: Key) {
+        self.bus.release_key(key);
     }
 
     pub fn get_pixels(&self) -> [u8; SCREEN_WIDTH*SCREEN_HEIGHT] {
@@ -100,6 +103,17 @@ impl Cpu {
     }
 
     fn step(&mut self) {
+        // if self.pc == 0x0150 {
+        //     println!("break");
+        //     self.debug = true;
+        // }
+        // if self.debug {
+        //     use std::io::stdin;
+        //     let mut input = String::new();
+        //     stdin().read_line(&mut input).unwrap();
+        //     println!("{}", self);
+        // }
+        
         if self.bus.has_irq() && self.bus.is_enabled_irq() {
             self.resolve_irq();
             return;
@@ -110,10 +124,14 @@ impl Cpu {
     }
 
     fn resolve_irq(&mut self) {
+        let addr = self.bus.isr_addr();
+        if addr == None {
+            return;
+        }
+
         let pc = self.pc;
         self.push((pc>>8) as u8);
         self.push((pc&0xFF) as u8);
-        let addr = self.bus.isr_addr();
 
         self.pc = addr.unwrap() as u16;
         self.bus.disable_irq();
@@ -251,8 +269,8 @@ impl Cpu {
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
-                    cpu.f.remove(Flags::N);
-                    if (cpu.b^b^1)&0x10 == 0x10 {
+                    cpu.f.insert(Flags::N);
+                    if (b&0xF).wrapping_sub(1) & (0xF+1) !=0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -275,13 +293,9 @@ impl Cpu {
                 opcode:     0x07,
                 cycles:     4,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x80 == 0x80;
+                    let carry = cpu.a & 0x80 != 0;
                     cpu.a = cpu.a.rotate_left(1);
-                    if cpu.a == 0 {
-                        cpu.f.insert(Flags::Z);
-                    } else {
-                        cpu.f.remove(Flags::Z);
-                    }
+                    cpu.f.remove(Flags::Z);
                     cpu.f.remove(Flags::N);
                     cpu.f.remove(Flags::H);
                     if carry {
@@ -312,7 +326,7 @@ impl Cpu {
                     let bc = cpu.read_bc();
                     cpu.write_hl(hl.wrapping_add(bc));
                     cpu.f.remove(Flags::N);
-                    if (cpu.read_hl()^hl^bc)&0x0100 == 0x0100 {
+                    if (hl&0xFFF)+(bc&0xFFF) > 0xFFF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -377,8 +391,8 @@ impl Cpu {
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
-                    cpu.f.remove(Flags::N);
-                    if (cpu.c^c^1)&0x10 == 0x10 {
+                    cpu.f.insert(Flags::N);
+                    if (c&0xF).wrapping_sub(1) & (0xF+1) !=0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -401,13 +415,9 @@ impl Cpu {
                 opcode:     0x0F,
                 cycles:     4,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x01 == 0x01;
+                    let carry = cpu.a & 0x01 != 0;
                     cpu.a = cpu.a.rotate_right(1);
-                    if cpu.a == 0 {
-                        cpu.f.insert(Flags::Z);
-                    } else {
-                        cpu.f.remove(Flags::Z);
-                    }
+                    cpu.f.remove(Flags::Z);
                     cpu.f.remove(Flags::N);
                     cpu.f.remove(Flags::H);
                     if carry {
@@ -490,8 +500,8 @@ impl Cpu {
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
-                    cpu.f.remove(Flags::N);
-                    if (cpu.d^d^1)&0x10 == 0x10 {
+                    cpu.f.insert(Flags::N);
+                    if (d&0xF).wrapping_sub(1) & (0xF+1) !=0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -514,16 +524,9 @@ impl Cpu {
                 opcode:     0x17,
                 cycles:     4,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x80 == 0x80;
-                    cpu.a = cpu.a << 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.a |= 1;
-                    }
-                    if cpu.a == 0 {
-                        cpu.f.insert(Flags::Z);
-                    } else {
-                        cpu.f.remove(Flags::Z);
-                    }
+                    let carry = cpu.a & 0x80 != 0;
+                    cpu.a = (cpu.a << 1) | cpu.f.contains(Flags::C) as u8;
+                    cpu.f.remove(Flags::Z);
                     cpu.f.remove(Flags::N);
                     cpu.f.remove(Flags::H);
                     if carry {
@@ -553,7 +556,7 @@ impl Cpu {
                     let de = cpu.read_de();
                     cpu.write_hl(hl.wrapping_add(de));
                     cpu.f.remove(Flags::N);
-                    if (cpu.read_hl()^hl^de)&0x0100 == 0x0100 {
+                    if (hl&0xFFF)+(de&0xFFF) > 0xFFF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -618,8 +621,8 @@ impl Cpu {
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
-                    cpu.f.remove(Flags::N);
-                    if (cpu.e^e^1)&0x10 == 0x10 {
+                    cpu.f.insert(Flags::N);
+                    if (e&0xF).wrapping_sub(1) & (0xF+1) !=0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -642,16 +645,12 @@ impl Cpu {
                 opcode:     0x01F,
                 cycles:     4,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x01 == 0x01;
+                    let carry = cpu.a & 0x01 != 0;
                     cpu.a = cpu.a >> 1;
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         cpu.a |= 0x80;
                     }
-                    if cpu.a == 0 {
-                        cpu.f.insert(Flags::Z);
-                    } else {
-                        cpu.f.remove(Flags::Z);
-                    }
+                    cpu.f.remove(Flags::Z);
                     cpu.f.remove(Flags::N);
                     cpu.f.remove(Flags::H);
                     if carry {
@@ -738,8 +737,8 @@ impl Cpu {
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
-                    cpu.f.remove(Flags::N);
-                    if (cpu.h^h^1)&0x10 == 0x10 {
+                    cpu.f.insert(Flags::N);
+                    if (h&0xF).wrapping_sub(1) & (0xF+1) !=0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -762,29 +761,32 @@ impl Cpu {
                 opcode:     0x27,
                 cycles:     4,
                 operation:  |cpu| {
+                    let mut carry = false;
                     let a = cpu.a;
-                    if cpu.f & Flags::N == Flags::N {
-                        if cpu.f & Flags::H == Flags::H || a&0x0F > 0x09 {
-                            cpu.a = a.wrapping_add(0x06);
+                    if !cpu.f.contains(Flags::N) {
+                        if cpu.f.contains(Flags::H) || (a&0x0F) > 0x09 {
+                            cpu.a = cpu.a.wrapping_add(0x06);
                         }
-                        if cpu.f & Flags::C == Flags::H || a > 0x9F {
-                            cpu.a = a.wrapping_add(0x60);
+                        if cpu.f.contains(Flags::C) || a > 0x9F {
+                            cpu.a = cpu.a.wrapping_add(0x60);
+                            carry = true;
                         }
                     } else {
-                        if cpu.f & Flags::H == Flags::H {
-                            cpu.a = a.wrapping_sub(0x06);
+                        if cpu.f.contains(Flags::H) {
+                            cpu.a = cpu.a.wrapping_sub(0x06);
                         }
-                        if cpu.f & Flags::C == Flags::C {
-                            cpu.a = a.wrapping_sub(0x60);
+                        if cpu.f.contains(Flags::C) {
+                            cpu.a = cpu.a.wrapping_sub(0x60);
+                            carry = true;
                         }
                     }
+                    cpu.f.remove(Flags::H);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
-                    cpu.f.remove(Flags::H);
-                    if cpu.a < a {
+                    if carry {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -813,7 +815,7 @@ impl Cpu {
                     let hl2 = cpu.read_hl();
                     cpu.write_hl(hl1.wrapping_add(hl2));
                     cpu.f.remove(Flags::N);
-                    if (cpu.read_hl()^hl1^hl2)&0x0100 == 0x0100 {
+                    if (hl1&0xFFF) + (hl2&0xFFF) > 0xFFF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -880,8 +882,8 @@ impl Cpu {
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
-                    cpu.f.remove(Flags::N);
-                    if (cpu.l^l^1)&0x10 == 0x10 {
+                    cpu.f.insert(Flags::N);
+                    if (l&0xF).wrapping_sub(1) & (0xF+1) !=0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -982,13 +984,13 @@ impl Cpu {
                     let addr = cpu.read_hl() as usize;
                     let n = cpu.bus.read8(addr);
                     cpu.bus.write8(addr, n.wrapping_sub(1));
-                    if cpu.b == 0 {
+                    if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
-                    cpu.f.remove(Flags::N);
-                    if (cpu.bus.read8(addr)^n^1)&0x10 == 0x10 {
+                    cpu.f.insert(Flags::N);
+                    if (n&0xF).wrapping_sub(1) & (0xF+1) !=0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -1031,14 +1033,14 @@ impl Cpu {
             },                   
             0x39    =>  Instruction {
                 name:       "ADD HL, SP",
-                opcode:     0x19,
+                opcode:     0x39,
                 cycles:     8,
                 operation:  |cpu| {
                     let hl = cpu.read_hl();
                     let sp = cpu.sp;
                     cpu.write_hl(hl.wrapping_add(sp));
                     cpu.f.remove(Flags::N);
-                    if (cpu.read_hl()^hl^sp)&0x0100 == 0x0100 {
+                    if (cpu.read_hl()^hl^sp)&0x1000 == 0x1000 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -1104,8 +1106,8 @@ impl Cpu {
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
-                    cpu.f.remove(Flags::N);
-                    if (cpu.a^a^1)&0x10 == 0x10 {
+                    cpu.f.insert(Flags::N);
+                    if (a&0xF).wrapping_sub(1) & (0xF+1) !=0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
@@ -1386,7 +1388,7 @@ impl Cpu {
                 opcode:     0x5B,
                 cycles:     4,
                 operation:  |cpu| {
-                    cpu.b = cpu.e;
+                    cpu.e = cpu.e;
                     Ok(())
                 },
             },
@@ -1937,21 +1939,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.b.wrapping_add(c);
-                    cpu.a = a.wrapping_add(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.b;
+                    cpu.a = a.wrapping_add(n).wrapping_add(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (cpu.a^a^n)&0x10 == 0x10 {
+                    if (a&0xF) + (n&0xF) + c > 0xF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if cpu.a < a {
+                    if a as u16 + n as u16 + c as u16 > 0xFF {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1965,21 +1967,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.c.wrapping_add(c);
-                    cpu.a = a.wrapping_add(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.c;
+                    cpu.a = a.wrapping_add(n).wrapping_add(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (cpu.a^a^n)&0x10 == 0x10 {
+                    if (a&0xF) + (n&0xF) + c > 0xF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if cpu.a < a {
+                    if a as u16 + n as u16 + c as u16 > 0xFF {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -1993,21 +1995,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.d.wrapping_add(c);
-                    cpu.a = a.wrapping_add(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.d;
+                    cpu.a = a.wrapping_add(n).wrapping_add(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (cpu.a^a^n)&0x10 == 0x10 {
+                    if (a&0xF) + (n&0xF) + c > 0xF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if cpu.a < a {
+                    if a as u16 + n as u16 + c as u16 > 0xFF {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2021,21 +2023,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.e.wrapping_add(c);
-                    cpu.a = a.wrapping_add(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.e;
+                    cpu.a = a.wrapping_add(n).wrapping_add(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (cpu.a^a^n)&0x10 == 0x10 {
+                    if (a&0xF) + (n&0xF) + c > 0xF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if cpu.a < a {
+                    if a as u16 + n as u16 + c as u16 > 0xFF {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2049,21 +2051,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.h.wrapping_add(c);
-                    cpu.a = a.wrapping_add(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.h;
+                    cpu.a = a.wrapping_add(n).wrapping_add(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (cpu.a^a^n)&0x10 == 0x10 {
+                    if (a&0xF) + (n&0xF) + c > 0xF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if cpu.a < a {
+                    if a as u16 + n as u16 + c as u16 > 0xFF {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2077,21 +2079,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.l.wrapping_add(c);
-                    cpu.a = a.wrapping_add(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.l;
+                    cpu.a = a.wrapping_add(n).wrapping_add(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (cpu.a^a^n)&0x10 == 0x10 {
+                    if (a&0xF) + (n&0xF) + c > 0xF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if cpu.a < a {
+                    if a as u16 + n as u16 + c as u16 > 0xFF {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2105,21 +2107,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.bus.read8(cpu.read_hl() as usize).wrapping_add(c);
-                    cpu.a = a.wrapping_add(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.bus.read8(cpu.read_hl() as usize);
+                    cpu.a = a.wrapping_add(n).wrapping_add(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (cpu.a^a^n)&0x10 == 0x10 {
+                    if (a&0xF) + (n&0xF) + c > 0xF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if cpu.a < a {
+                    if a as u16 + n as u16 + c as u16 > 0xFF {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2133,21 +2135,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.a.wrapping_add(c);
-                    cpu.a = a.wrapping_add(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.a;
+                    cpu.a = a.wrapping_add(n).wrapping_add(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (cpu.a^a^n)&0x10 == 0x10 {
+                    if (a&0xF) + (n&0xF) + c > 0xF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if cpu.a < a {
+                    if a as u16 + n as u16 + c as u16 > 0xFF {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2377,21 +2379,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.b.wrapping_add(c);
-                    cpu.a = a.wrapping_sub(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.b;
+                    cpu.a = a.wrapping_sub(n).wrapping_sub(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.insert(Flags::N);
-                    if a&0x0F < n&0x0F {
+                    if (a&0xF).wrapping_sub(n&0xF).wrapping_sub(c) & (0xF+1) != 0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if a < n {
+                    if (a as u16) < (n as u16 + c as u16) {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2405,21 +2407,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.c.wrapping_add(c);
-                    cpu.a = a.wrapping_sub(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.c;
+                    cpu.a = a.wrapping_sub(n).wrapping_sub(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.insert(Flags::N);
-                    if a&0x0F < n&0x0F {
+                    if (a&0xF).wrapping_sub(n&0xF).wrapping_sub(c) & (0xF+1) != 0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if a < n {
+                    if (a as u16) < (n as u16 + c as u16) {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2433,21 +2435,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.d.wrapping_add(c);
-                    cpu.a = a.wrapping_sub(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.d;
+                    cpu.a = a.wrapping_sub(n).wrapping_sub(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.insert(Flags::N);
-                    if a&0x0F < n&0x0F {
+                    if (a&0xF).wrapping_sub(n&0xF).wrapping_sub(c) & (0xF+1) != 0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if a < n {
+                    if (a as u16) < (n as u16 + c as u16) {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2461,21 +2463,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.e.wrapping_add(c);
-                    cpu.a = a.wrapping_sub(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.e;
+                    cpu.a = a.wrapping_sub(n).wrapping_sub(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.insert(Flags::N);
-                    if a&0x0F < n&0x0F {
+                    if (a&0xF).wrapping_sub(n&0xF).wrapping_sub(c) & (0xF+1) != 0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if a < n {
+                    if (a as u16) < (n as u16 + c as u16) {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2489,21 +2491,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.h.wrapping_add(c);
-                    cpu.a = a.wrapping_sub(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.h;
+                    cpu.a = a.wrapping_sub(n).wrapping_sub(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.insert(Flags::N);
-                    if a&0x0F < n&0x0F {
+                    if (a&0xF).wrapping_sub(n&0xF).wrapping_sub(c) & (0xF+1) != 0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if a < n {
+                    if (a as u16) < (n as u16 + c as u16) {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2517,21 +2519,21 @@ impl Cpu {
                 cycles:     4,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.l.wrapping_add(c);
-                    cpu.a = a.wrapping_sub(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.l;
+                    cpu.a = a.wrapping_sub(n).wrapping_sub(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.insert(Flags::N);
-                    if a&0x0F < n&0x0F {
+                    if (a&0xF).wrapping_sub(n&0xF).wrapping_sub(c) & (0xF+1) != 0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if a < n {
+                    if (a as u16) < (n as u16 + c as u16) {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2545,21 +2547,21 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.bus.read8(cpu.read_hl() as usize).wrapping_add(c);
-                    cpu.a = a.wrapping_sub(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.bus.read8(cpu.read_hl() as usize);
+                    cpu.a = a.wrapping_sub(n).wrapping_sub(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.insert(Flags::N);
-                    if a&0x0F < n&0x0F {
+                    if (a&0xF).wrapping_sub(n&0xF).wrapping_sub(c) & (0xF+1) != 0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if a < n {
+                    if (a as u16) < (n as u16 + c as u16) {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2574,20 +2576,20 @@ impl Cpu {
                 operation:  |cpu| {
                     let a = cpu.a;
                     let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.a.wrapping_add(c);
-                    cpu.a = a.wrapping_sub(n);
+                    let n = cpu.a;
+                    cpu.a = a.wrapping_sub(n).wrapping_sub(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.insert(Flags::N);
-                    if a&0x0F < n&0x0F {
+                    if (a&0xF).wrapping_sub(n&0xF).wrapping_sub(c) & (0xF+1) != 0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if a < n {
+                    if (a as u16) < (n as u16 + c as u16) {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -2761,7 +2763,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2780,7 +2782,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2799,7 +2801,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2818,7 +2820,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2837,7 +2839,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2856,7 +2858,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2875,7 +2877,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2894,7 +2896,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2913,7 +2915,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2932,7 +2934,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2951,7 +2953,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2970,7 +2972,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -2989,7 +2991,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -3008,7 +3010,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -3027,7 +3029,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -3046,7 +3048,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -3447,21 +3449,21 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.fetch().wrapping_add(c);
-                    cpu.a = a.wrapping_add(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.fetch();
+                    cpu.a = a.wrapping_add(n).wrapping_add(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    if (cpu.a^a^n)&0x10 == 0x10 {
+                    if (a&0xF) + (n&0xF) + c > 0xF {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if cpu.a < a {
+                    if a as u16 + n as u16 + c as u16 > 0xFF {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -3643,21 +3645,21 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let a = cpu.a;
-                    let c = (cpu.f & Flags::C == Flags::C) as u8;
-                    let n = cpu.fetch().wrapping_add(c);
-                    cpu.a = a.wrapping_sub(n);
+                    let c = cpu.f.contains(Flags::C) as u8;
+                    let n = cpu.fetch();
+                    cpu.a = a.wrapping_sub(n).wrapping_sub(c);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.insert(Flags::N);
-                    if a&0x0F < n&0x0F {
+                    if (a&0xF).wrapping_sub(n&0xF).wrapping_sub(c) & (0xF+1) != 0 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if a < n {
+                    if (a as u16) < (n as u16 + c as u16) {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -3808,7 +3810,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -3888,7 +3890,7 @@ impl Cpu {
                         cpu.f.remove(Flags::Z);
                     }
                     cpu.f.remove(Flags::N);
-                    cpu.f.insert(Flags::H);
+                    cpu.f.remove(Flags::H);
                     cpu.f.remove(Flags::C);
                     Ok(())
                 },
@@ -3911,15 +3913,16 @@ impl Cpu {
                 operation:  |cpu| {
                     let n = cpu.fetch() as i8 as i16;
                     let value = ((cpu.sp as i16).wrapping_add(n)) as u16;
+                    let c = cpu.sp as u16 ^ n as u16 ^ value;
                     cpu.write_hl(value);
                     cpu.f.remove(Flags::Z);
                     cpu.f.remove(Flags::N);
-                    if n >= 0 {
+                    if c & 0x10 == 0x10 {
                         cpu.f.insert(Flags::H);
                     } else {
                         cpu.f.remove(Flags::H);
                     }
-                    if cpu.sp > value {
+                    if c & 0x100 == 0x100 {
                         cpu.f.insert(Flags::C);
                     } else {
                         cpu.f.remove(Flags::C);
@@ -4006,7 +4009,7 @@ impl Cpu {
                 opcode:     0x00,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.b & 0x80 == 0x80;
+                    let carry = cpu.b & 0x80 != 0;
                     cpu.b = cpu.b.rotate_left(1);
                     if cpu.b == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4028,7 +4031,7 @@ impl Cpu {
                 opcode:     0x01,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.c & 0x80 == 0x80;
+                    let carry = cpu.c & 0x80 != 0;
                     cpu.c = cpu.c.rotate_left(1);
                     if cpu.c == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4050,7 +4053,7 @@ impl Cpu {
                 opcode:     0x02,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.d & 0x80 == 0x80;
+                    let carry = cpu.d & 0x80 != 0;
                     cpu.d = cpu.d.rotate_left(1);
                     if cpu.d == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4072,7 +4075,7 @@ impl Cpu {
                 opcode:     0x03,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.e & 0x80 == 0x80;
+                    let carry = cpu.e & 0x80 != 0;
                     cpu.e = cpu.e.rotate_left(1);
                     if cpu.e == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4094,7 +4097,7 @@ impl Cpu {
                 opcode:     0x04,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.h & 0x80 == 0x80;
+                    let carry = cpu.h & 0x80 != 0;
                     cpu.h = cpu.h.rotate_left(1);
                     if cpu.h == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4116,7 +4119,7 @@ impl Cpu {
                 opcode:     0x05,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.l & 0x80 == 0x80;
+                    let carry = cpu.l & 0x80 != 0;
                     cpu.l = cpu.l.rotate_left(1);
                     if cpu.l == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4139,7 +4142,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.bus.read8(addr) & 0x80 == 0x80;
+                    let carry = cpu.bus.read8(addr) & 0x80 != 0;
                     cpu.bus.write8(addr, cpu.bus.read8(addr).rotate_left(1));
                     if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4161,7 +4164,7 @@ impl Cpu {
                 opcode:     0x07,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x80 == 0x80;
+                    let carry = cpu.a & 0x80 != 0;
                     cpu.a = cpu.a.rotate_left(1);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4183,11 +4186,8 @@ impl Cpu {
                 opcode:     0x08,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.b & 0x01 == 0x01;
-                    cpu.b = cpu.b >> 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.b |= 0x80;
-                    }
+                    let carry = cpu.b & 0x01 != 0;
+                    cpu.b = cpu.b.rotate_right(1);
                     if cpu.b == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4208,11 +4208,8 @@ impl Cpu {
                 opcode:     0x09,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.c & 0x01 == 0x01;
-                    cpu.c = cpu.c >> 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.c |= 0x80;
-                    }
+                    let carry = cpu.c & 0x01 != 0;
+                    cpu.c = cpu.c.rotate_right(1);
                     if cpu.c == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4233,12 +4230,9 @@ impl Cpu {
                 opcode:     0x0A,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x01 == 0x01;
-                    cpu.a = cpu.a >> 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.a |= 0x80;
-                    }
-                    if cpu.a == 0 {
+                    let carry = cpu.d & 0x01 != 0;
+                    cpu.d = cpu.d.rotate_right(1);
+                    if cpu.d == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
                         cpu.f.remove(Flags::Z);
@@ -4258,11 +4252,8 @@ impl Cpu {
                 opcode:     0x08,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.e & 0x01 == 0x01;
-                    cpu.e = cpu.e >> 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.e |= 0x80;
-                    }
+                    let carry = cpu.e & 0x01 != 0;
+                    cpu.e = cpu.e.rotate_right(1);
                     if cpu.e == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4283,11 +4274,8 @@ impl Cpu {
                 opcode:     0x0C,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.h & 0x01 == 0x01;
-                    cpu.h = cpu.h >> 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.h |= 0x80;
-                    }
+                    let carry = cpu.h & 0x01 != 0;
+                    cpu.h = cpu.h.rotate_right(1);
                     if cpu.h == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4308,11 +4296,8 @@ impl Cpu {
                 opcode:     0x0D,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.l & 0x01 == 0x01;
-                    cpu.l = cpu.l >> 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.l |= 0x80;
-                    }
+                    let carry = cpu.l & 0x01 != 0;
+                    cpu.l = cpu.l.rotate_right(1);
                     if cpu.l == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4334,11 +4319,8 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.bus.read8(addr) & 0x01 == 0x01;
-                    cpu.bus.write8(addr, cpu.bus.read8(addr) >> 1);
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x80);
-                    }
+                    let carry = cpu.bus.read8(addr) & 0x01 != 0;
+                    cpu.bus.write8(addr, cpu.bus.read8(addr).rotate_right(1));
                     if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4360,11 +4342,8 @@ impl Cpu {
                 opcode:     0x0F,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x01 == 0x01;
-                    cpu.a = cpu.a >> 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.a |= 0x80;
-                    }
+                    let carry = cpu.a & 0x01 != 0;
+                    cpu.a = cpu.a.rotate_right(1);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4386,10 +4365,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let carry = cpu.b & 0x80 == 0x80;
-                    cpu.b = cpu.b << 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.b |= 1;
-                    }
+                    cpu.b = cpu.b << 1 | cpu.f.contains(Flags::C) as u8;
                     if cpu.b == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4411,10 +4387,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let carry = cpu.c & 0x80 == 0x80;
-                    cpu.c = cpu.c << 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.c |= 1;
-                    }
+                    cpu.c = cpu.c << 1 | cpu.f.contains(Flags::C) as u8;
                     if cpu.c == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4436,10 +4409,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let carry = cpu.d & 0x80 == 0x80;
-                    cpu.d = cpu.d << 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.d |= 1;
-                    }
+                    cpu.d = cpu.d << 1 | cpu.f.contains(Flags::C) as u8;
                     if cpu.d == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4461,10 +4431,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let carry = cpu.e & 0x80 == 0x80;
-                    cpu.e = cpu.e << 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.e |= 1;
-                    }
+                    cpu.e = cpu.e << 1 | cpu.f.contains(Flags::C) as u8;
                     if cpu.e == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4486,10 +4453,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let carry = cpu.h & 0x80 == 0x80;
-                    cpu.h = cpu.h << 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.h |= 1;
-                    }
+                    cpu.h = cpu.h << 1 | cpu.f.contains(Flags::C) as u8;
                     if cpu.h == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4511,10 +4475,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let carry = cpu.l & 0x80 == 0x80;
-                    cpu.l = cpu.l << 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.l |= 1;
-                    }
+                    cpu.l = cpu.l << 1 | cpu.f.contains(Flags::C) as u8;
                     if cpu.l == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4537,10 +4498,8 @@ impl Cpu {
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
                     let carry = cpu.bus.read8(addr) & 0x80 == 0x80;
-                    cpu.bus.write8(addr, cpu.bus.read8(addr) << 1);
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.bus.write8(addr, cpu.bus.read8(addr) | 1);
-                    }
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) << 1 |
+                                    cpu.f.contains(Flags::C) as u8);
                     if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4561,11 +4520,9 @@ impl Cpu {
                 opcode:     0x017,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x80 == 0x80;
+                    let carry = (cpu.a & 0x80) != 0;
                     cpu.a = cpu.a << 1;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.a |= 1;
-                    }
+                    cpu.a = cpu.a | cpu.f.contains(Flags::C) as u8;
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -4586,9 +4543,9 @@ impl Cpu {
                 opcode:     0x018,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.b & 0x01 == 0x01;
+                    let carry = cpu.b & 0x01 != 0;
                     cpu.b = cpu.b >> 1;
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         cpu.b |= 0x80;
                     }
                     if cpu.b == 0 {
@@ -4611,9 +4568,9 @@ impl Cpu {
                 opcode:     0x019,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.c & 0x01 == 0x01;
+                    let carry = cpu.c & 0x01 != 0;
                     cpu.c = cpu.c >> 1;
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         cpu.c |= 0x80;
                     }
                     if cpu.c == 0 {
@@ -4636,9 +4593,9 @@ impl Cpu {
                 opcode:     0x01A,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.d & 0x01 == 0x01;
+                    let carry = cpu.d & 0x01 != 0;
                     cpu.d = cpu.d >> 1;
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         cpu.d |= 0x80;
                     }
                     if cpu.d == 0 {
@@ -4661,9 +4618,9 @@ impl Cpu {
                 opcode:     0x01B,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.e & 0x01 == 0x01;
+                    let carry = cpu.e & 0x01 != 0;
                     cpu.e = cpu.e >> 1;
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         cpu.e |= 0x80;
                     }
                     if cpu.e == 0 {
@@ -4686,9 +4643,9 @@ impl Cpu {
                 opcode:     0x01C,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.h & 0x01 == 0x01;
+                    let carry = cpu.h & 0x01 != 0;
                     cpu.h = cpu.h >> 1;
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         cpu.h |= 0x80;
                     }
                     if cpu.h == 0 {
@@ -4711,9 +4668,9 @@ impl Cpu {
                 opcode:     0x01D,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.l & 0x01 == 0x01;
+                    let carry = cpu.l & 0x01 != 0;
                     cpu.l = cpu.l >> 1;
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         cpu.l |= 0x80;
                     }
                     if cpu.l == 0 {
@@ -4737,9 +4694,9 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.bus.read8(addr) & 0x01 == 0x01;
+                    let carry = cpu.bus.read8(addr) & 0x01 != 0;
                     cpu.bus.write8(addr, cpu.bus.read8(addr) >> 1);
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         cpu.bus.write8(addr, cpu.bus.read8(addr) | 0x80);
                     }
                     if cpu.bus.read8(addr) == 0 {
@@ -4763,9 +4720,9 @@ impl Cpu {
                 opcode:     0x01F,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x01 == 0x01;
+                    let carry = cpu.a & 0x01 != 0;
                     cpu.a = cpu.a >> 1;
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         cpu.a |= 0x80;
                     }
                     if cpu.a == 0 {
@@ -4788,7 +4745,7 @@ impl Cpu {
                 opcode:     0x20,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.b & 0x80 == 0x80;
+                    let carry = cpu.b & 0x80 != 0;
                     cpu.b = cpu.b << 1;
                     if cpu.b == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4810,7 +4767,7 @@ impl Cpu {
                 opcode:     0x21,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.c & 0x80 == 0x80;
+                    let carry = cpu.c & 0x80 != 0;
                     cpu.c = cpu.c << 1;
                     if cpu.c == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4832,7 +4789,7 @@ impl Cpu {
                 opcode:     0x22,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.d & 0x80 == 0x80;
+                    let carry = cpu.d & 0x80 != 0;
                     cpu.d = cpu.d << 1;
                     if cpu.d == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4854,7 +4811,7 @@ impl Cpu {
                 opcode:     0x23,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.e & 0x80 == 0x80;
+                    let carry = cpu.e & 0x80 != 0;
                     cpu.e = cpu.e << 1;
                     if cpu.e == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4876,7 +4833,7 @@ impl Cpu {
                 opcode:     0x24,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.h & 0x80 == 0x80;
+                    let carry = cpu.h & 0x80 != 0;
                     cpu.h = cpu.h << 1;
                     if cpu.h == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4898,7 +4855,7 @@ impl Cpu {
                 opcode:     0x25,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.l & 0x80 == 0x80;
+                    let carry = cpu.l & 0x80 != 0;
                     cpu.l = cpu.l << 1;
                     if cpu.l == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4921,7 +4878,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.bus.read8(addr) & 0x80 == 0x80;
+                    let carry = cpu.bus.read8(addr) & 0x80 != 0;
                     cpu.bus.write8(addr, cpu.bus.read8(addr) << 1);
                     if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4943,7 +4900,7 @@ impl Cpu {
                 opcode:     0x27,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x80 == 0x80;
+                    let carry = cpu.a & 0x80 != 0;
                     cpu.a = cpu.a << 1;
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4965,7 +4922,7 @@ impl Cpu {
                 opcode:     0x28,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.b & 0x01 == 0x01;
+                    let carry = cpu.b & 0x01 != 0;
                     cpu.b = cpu.b >> 1 | cpu.b & 0x80;
                     if cpu.b == 0 {
                         cpu.f.insert(Flags::Z);
@@ -4987,7 +4944,7 @@ impl Cpu {
                 opcode:     0x29,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.c & 0x01 == 0x01;
+                    let carry = cpu.c & 0x01 != 0;
                     cpu.c = cpu.c >> 1 | cpu.c & 0x80;
                     if cpu.c == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5009,7 +4966,7 @@ impl Cpu {
                 opcode:     0x2A,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.d & 0x01 == 0x01;
+                    let carry = cpu.d & 0x01 != 0;
                     cpu.d = cpu.d >> 1 | cpu.d & 0x80;
                     if cpu.d == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5031,7 +4988,7 @@ impl Cpu {
                 opcode:     0x2B,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.e & 0x01 == 0x01;
+                    let carry = cpu.e & 0x01 != 0;
                     cpu.e = cpu.e >> 1 | cpu.e & 0x80;
                     if cpu.e == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5053,7 +5010,7 @@ impl Cpu {
                 opcode:     0x2C,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.h & 0x01 == 0x01;
+                    let carry = cpu.h & 0x01 != 0;
                     cpu.h = cpu.h >> 1 | cpu.h & 0x80;
                     if cpu.h == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5075,7 +5032,7 @@ impl Cpu {
                 opcode:     0x2D,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.l & 0x01 == 0x01;
+                    let carry = cpu.l & 0x01 != 0;
                     cpu.l = cpu.l >> 1 | cpu.l & 0x80;
                     if cpu.l == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5098,8 +5055,9 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.bus.read8(addr) & 0x01 == 0x01;
-                    cpu.bus.write8(addr, cpu.bus.read8(addr) >> 1);
+                    let carry = cpu.bus.read8(addr) & 0x01 != 0;
+                    cpu.bus.write8(addr, cpu.bus.read8(addr) >> 1
+                                | cpu.bus.read8(addr) & 0x80);
                     if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -5120,8 +5078,8 @@ impl Cpu {
                 opcode:     0x2F,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x01 == 0x01;
-                    cpu.a = cpu.a >> 1;
+                    let carry = cpu.a & 0x01 != 0;
+                    cpu.a = cpu.a >> 1 | cpu.a & 0x80;
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -5142,9 +5100,7 @@ impl Cpu {
                 opcode:     0x30,
                 cycles:     8,
                 operation:  |cpu| {
-                    let hi = cpu.b & 0xF0;
-                    let lo = cpu.b & 0x0F;
-                    cpu.b = hi | lo;
+                    cpu.b = cpu.b << 4 | cpu.b >> 4;
                     if cpu.b == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -5161,9 +5117,7 @@ impl Cpu {
                 opcode:     0x31,
                 cycles:     8,
                 operation:  |cpu| {
-                    let hi = cpu.c & 0xF0;
-                    let lo = cpu.c & 0x0F;
-                    cpu.c = hi | lo;
+                    cpu.c = cpu.c << 4 | cpu.c >> 4;
                     if cpu.c == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -5180,9 +5134,7 @@ impl Cpu {
                 opcode:     0x30,
                 cycles:     8,
                 operation:  |cpu| {
-                    let hi = cpu.d & 0xF0;
-                    let lo = cpu.d & 0x0F;
-                    cpu.d = hi | lo;
+                    cpu.d = cpu.d << 4 | cpu.d >> 4;
                     if cpu.d == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -5199,9 +5151,7 @@ impl Cpu {
                 opcode:     0x30,
                 cycles:     8,
                 operation:  |cpu| {
-                    let hi = cpu.e & 0xF0;
-                    let lo = cpu.e & 0x0F;
-                    cpu.e = hi | lo;
+                    cpu.e = cpu.e << 4 | cpu.e >> 4;
                     if cpu.e == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -5218,9 +5168,7 @@ impl Cpu {
                 opcode:     0x30,
                 cycles:     8,
                 operation:  |cpu| {
-                    let hi = cpu.h & 0xF0;
-                    let lo = cpu.h & 0x0F;
-                    cpu.h = hi | lo;
+                    cpu.h = cpu.h << 4 | cpu.h >> 4;
                     if cpu.h == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -5237,9 +5185,7 @@ impl Cpu {
                 opcode:     0x35,
                 cycles:     8,
                 operation:  |cpu| {
-                    let hi = cpu.l & 0xF0;
-                    let lo = cpu.l & 0x0F;
-                    cpu.l = hi | lo;
+                    cpu.l = cpu.l << 4 | cpu.l >> 4;
                     if cpu.l == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -5259,7 +5205,7 @@ impl Cpu {
                     let addr = cpu.read_hl() as usize;
                     let hi = cpu.bus.read8(addr) & 0xF0;
                     let lo = cpu.bus.read8(addr) & 0x0F;
-                    cpu.bus.write8(addr, hi | lo);
+                    cpu.bus.write8(addr, hi >> 4 | lo << 4);
                     if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -5276,9 +5222,7 @@ impl Cpu {
                 opcode:     0x37,
                 cycles:     8,
                 operation:  |cpu| {
-                    let hi = cpu.a & 0xF0;
-                    let lo = cpu.a & 0x0F;
-                    cpu.a = hi | lo;
+                    cpu.a = cpu.a << 4 | cpu.a >> 4;
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
                     } else {
@@ -5295,7 +5239,7 @@ impl Cpu {
                 opcode:     0x38,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.b & 0x01 == 0x01;
+                    let carry = cpu.b & 0x01 != 0;
                     cpu.b = cpu.b >> 1;
                     if cpu.b == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5317,7 +5261,7 @@ impl Cpu {
                 opcode:     0x39,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.c & 0x01 == 0x01;
+                    let carry = cpu.c & 0x01 != 0;
                     cpu.c = cpu.c >> 1;
                     if cpu.c == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5339,7 +5283,7 @@ impl Cpu {
                 opcode:     0x3A,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.d & 0x01 == 0x01;
+                    let carry = cpu.d & 0x01 != 0;
                     cpu.d = cpu.d >> 1;
                     if cpu.d == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5361,7 +5305,7 @@ impl Cpu {
                 opcode:     0x3B,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.e & 0x01 == 0x01;
+                    let carry = cpu.e & 0x01 != 0;
                     cpu.e = cpu.e >> 1;
                     if cpu.e == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5383,7 +5327,7 @@ impl Cpu {
                 opcode:     0x3C,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.h & 0x01 == 0x01;
+                    let carry = cpu.h & 0x01 != 0;
                     cpu.h = cpu.h >> 1;
                     if cpu.h == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5405,7 +5349,7 @@ impl Cpu {
                 opcode:     0x3D,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.l & 0x01 == 0x01;
+                    let carry = cpu.l & 0x01 != 0;
                     cpu.l = cpu.l >> 1;
                     if cpu.l == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5428,7 +5372,7 @@ impl Cpu {
                 cycles:     16,
                 operation:  |cpu| {
                     let addr = cpu.read_hl() as usize;
-                    let carry = cpu.bus.read8(addr) & 0x01 == 0x01;
+                    let carry = cpu.bus.read8(addr) & 0x01 != 0;
                     cpu.bus.write8(addr, cpu.bus.read8(addr) >> 1);
                     if cpu.bus.read8(addr) == 0 {
                         cpu.f.insert(Flags::Z);
@@ -5450,7 +5394,7 @@ impl Cpu {
                 opcode:     0x2F,
                 cycles:     8,
                 operation:  |cpu| {
-                    let carry = cpu.a & 0x01 == 0x01;
+                    let carry = cpu.a & 0x01 != 0;
                     cpu.a = cpu.a >> 1;
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);

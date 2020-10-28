@@ -59,7 +59,7 @@ impl Bus {
         self.interrupt.is_enabled_irq()
     }
 
-    pub fn isr_addr(&self) -> Option<usize> {
+    pub fn isr_addr(&mut self) -> Option<usize> {
         self.interrupt.isr_addr()
     }
 
@@ -67,12 +67,17 @@ impl Bus {
         self.interrupt.has_irq()
     }
 
-    pub fn key_push(&mut self, key: Key) {
-        self.pad.key_push(key);
+    pub fn has_irq_from_kind(&self, kind: InterruptKind) -> bool {
+        self.interrupt.is_set(kind)
     }
 
-    pub fn key_release(&mut self, key: Key) {
-        self.pad.key_release(key);
+    pub fn push_key(&mut self, key: Key) {
+        self.pad.push_key(key);
+        self.interrupt.set_irq(InterruptKind::Joypad);
+    }
+
+    pub fn release_key(&mut self, key: Key) {
+        self.pad.release_key(key);
     }
 
     pub fn get_pixels(&self) -> [u8; SCREEN_WIDTH*SCREEN_HEIGHT] {
@@ -95,12 +100,15 @@ impl Bus {
 
     pub fn tick(&mut self) {
         match self.ppu.tick() {
-            (Some(_), Some(_))  =>  {
-                self.interrupt.set_irq(InterruptKind::Vblank);
+            (None, Some(_))  =>  {
                 self.interrupt.set_irq(InterruptKind::LcdcStatus);
             },
             (Some(_), None)     =>  {
                 self.interrupt.set_irq(InterruptKind::Vblank);
+            },
+            (Some(_), Some(_))  =>  {
+                self.interrupt.set_irq(InterruptKind::Vblank);
+                self.interrupt.set_irq(InterruptKind::LcdcStatus);
             },
             _                   =>  (),
         }

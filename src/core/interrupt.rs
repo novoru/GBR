@@ -69,14 +69,14 @@ impl Interrupt {
     }
 
     pub fn has_irq(&self) -> bool {
-        self.irqf.bits() != 0x00
+        self.irqf.bits() & self.irqe.bits() != 0x00
     }
 
     pub fn is_enabled_irq(&self) -> bool {
         self.ime
     }
 
-    fn interrupt_kind(&self) -> Option<InterruptKind> {
+    fn interrupt_kind(&mut self) -> Option<InterruptKind> {
         if !self.ime {
             return None;
         }
@@ -105,14 +105,29 @@ impl Interrupt {
         None
     }
 
-    pub fn isr_addr(&self) -> Option<usize> {
+    pub fn isr_addr(&mut self) -> Option<usize> {
         let kind = self.interrupt_kind()?;
         match kind {
-            InterruptKind::Vblank       =>  Some(VBLANK_ISR_ADDR),
-            InterruptKind::LcdcStatus   =>  Some(LCDC_STAT_ISR_ADDR),
-            InterruptKind::Timer        =>  Some(TIMER_ISR_ADDR),
-            InterruptKind::Serial       =>  Some(SERIAL_ISR_ADDR),
-            InterruptKind::Joypad       =>  Some(JOYPAD_ISR_ADDR),
+            InterruptKind::Vblank       =>  {
+                self.remove_irq(InterruptKind::Vblank);
+                return Some(VBLANK_ISR_ADDR);
+            },
+            InterruptKind::LcdcStatus   =>  {
+                self.remove_irq(InterruptKind::LcdcStatus);
+                return Some(LCDC_STAT_ISR_ADDR);
+            },
+            InterruptKind::Timer        =>  {
+                self.remove_irq(InterruptKind::Timer);
+                return Some(TIMER_ISR_ADDR);
+            },
+            InterruptKind::Serial       =>  {
+                self.remove_irq(InterruptKind::Serial);
+                return Some(SERIAL_ISR_ADDR);
+            },
+            InterruptKind::Joypad       =>  {
+                self.remove_irq(InterruptKind::Joypad);
+                return Some(JOYPAD_ISR_ADDR);
+            },
         }
     }
 

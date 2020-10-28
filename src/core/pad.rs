@@ -41,7 +41,7 @@ impl fmt::Display for Pad {
 impl Pad {
     pub fn new() -> Self {
         Pad {
-            register:   P1::empty(),
+            register:   P1::P15 | P1::P14 | P1::P13 | P1::P12 | P1::P11 | P1::P10,
         }
     }
 
@@ -53,30 +53,30 @@ impl Pad {
         self.register = P1::from_bits_truncate(data);
     }
 
-    fn update(&mut self) {
-        if !self.register.contains(P1::P14) | !self.register.contains(P1::P15) {
-            self.register.remove(P1::P10 | P1::P11 | P1::P12 | P1::P13);
+    fn _update(&mut self) {
+        if self.register.contains(P1::P14) | self.register.contains(P1::P15) {
+            self.register.insert(P1::P10 | P1::P11 | P1::P12 | P1::P13);
         }
     }
 
-    pub fn key_push(&mut self, key: Key) {
-        match key {
-            Key::Right | Key::A       =>  self.register.insert(P1::P10),
-            Key::Left  | Key::B       =>  self.register.insert(P1::P11),
-            Key::Up    | Key::Select  =>  self.register.insert(P1::P12),
-            Key::Down  | Key::Start   =>  self.register.insert(P1::P13),
-        }
-        self.update();
-    }
-    
-    pub fn key_release(&mut self, key: Key) {
+    pub fn push_key(&mut self, key: Key) {
         match key {
             Key::Right | Key::A       =>  self.register.remove(P1::P10),
             Key::Left  | Key::B       =>  self.register.remove(P1::P11),
             Key::Up    | Key::Select  =>  self.register.remove(P1::P12),
             Key::Down  | Key::Start   =>  self.register.remove(P1::P13),
         }
-        self.update();
+        // self.update();
+    }
+    
+    pub fn release_key(&mut self, key: Key) {
+        match key {
+            Key::Right | Key::A       =>  self.register.insert(P1::P10),
+            Key::Left  | Key::B       =>  self.register.insert(P1::P11),
+            Key::Up    | Key::Select  =>  self.register.insert(P1::P12),
+            Key::Down  | Key::Start   =>  self.register.insert(P1::P13),
+        }
+        // self.update();
     }
 
 }

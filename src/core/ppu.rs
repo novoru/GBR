@@ -243,17 +243,15 @@ impl Ppu {
         let mut lcdc_irq = false;
 
         if self.clock >= CYCLE_PER_LINE {
+            vblank_irq = true;
             if self.ly == SCREEN_HEIGHT as u8 {
-                if self.sprite_on() {
-                    self.build_sprite();
-                    vblank_irq = true;
-                    if self.stat.contains(Stat::INTR_LYC) {
-                        lcdc_irq = true;
-                    }
+                self.build_sprite();
+                if self.stat.contains(Stat::INTR_LYC) {
+                    lcdc_irq = true;
                 }
             } else if self.ly >= SCREEN_HEIGHT as u8 + LCD_BLANK_HEIGHT {
                 self.ly = 0;
-                self.build_bg();
+                // self.build_bg();
             } else if self.ly < SCREEN_HEIGHT as u8 {
                 self.build_bg();
                 // if self.window_enabled() {
@@ -263,7 +261,9 @@ impl Ppu {
 
             if self.ly == self.lyc {
                 self.stat.insert(Stat::LYC_STAT);
-                lcdc_irq = true;
+                if self.stat.contains(Stat::INTR_LYC) {
+                    lcdc_irq = true;
+                }
             } else {
                 self.stat.remove(Stat::MODE_FLAG1);
                 self.stat.remove(Stat::MODE_FLAG0);
@@ -274,8 +274,7 @@ impl Ppu {
 
         match (vblank_irq, lcdc_irq) {
             (false, false)  =>  (None, None),
-            (false, true)   =>  (Some(InterruptKind::Vblank),
-                                 Some(InterruptKind::LcdcStatus)),
+            (false, true)   =>  (None, Some(InterruptKind::LcdcStatus)),
             (true, false)   =>  (Some(InterruptKind::Vblank), None),
             (true, true)    =>  (Some(InterruptKind::Vblank),
                                  Some(InterruptKind::LcdcStatus)),
@@ -372,6 +371,9 @@ impl Ppu {
     }
 
     fn build_sprite(&mut self) {
+        if !self.sprite_on() {
+            return;
+        }
         for attr in self.oam.iter() {
             let height = self.sprite_size();
             for x in 0..8 as u8 {

@@ -4,6 +4,8 @@ use ggez::graphics;
 use ggez::nalgebra::Point2;
 use ggez::timer;
 use std::path::Path;
+use std::thread;
+use std::time;
 
 use crate::core::cpu::Cpu;
 use crate::core::pad::Key;
@@ -56,7 +58,7 @@ impl MainWindow {
 
 impl EventHandler for MainWindow {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        for _ in 0..4000 {
+        for _ in 0..17556 {
             self.cpu.tick();
             self.update_pixels(self.cpu.get_pixels());
         }
@@ -65,6 +67,7 @@ impl EventHandler for MainWindow {
             println!("Delta frame time: {:?} ", timer::delta(ctx));
             println!("Average FPS: {}", timer::fps(ctx));
         }
+
         Ok(())
     }
 
@@ -104,14 +107,36 @@ impl EventHandler for MainWindow {
                 keycode, keymod, repeat);
 
         match keycode {
-            KeyCode::Left       =>  self.cpu.key_push(Key::Left),
-            KeyCode::Right      =>  self.cpu.key_push(Key::Right),
-            KeyCode::Up         =>  self.cpu.key_push(Key::Up),
-            KeyCode::Down       =>  self.cpu.key_push(Key::Down),
-            KeyCode::Z          =>  self.cpu.key_push(Key::A),
-            KeyCode::X          =>  self.cpu.key_push(Key::B),
-            KeyCode::Return     =>  self.cpu.key_push(Key::Start),
-            KeyCode::Back       =>  self.cpu.key_push(Key::Select),
+            KeyCode::Left       =>  self.cpu.push_key(Key::Left),
+            KeyCode::Right      =>  self.cpu.push_key(Key::Right),
+            KeyCode::Up         =>  self.cpu.push_key(Key::Up),
+            KeyCode::Down       =>  self.cpu.push_key(Key::Down),
+            KeyCode::Z          =>  self.cpu.push_key(Key::A),
+            KeyCode::X          =>  self.cpu.push_key(Key::B),
+            KeyCode::Return     =>  self.cpu.push_key(Key::Start),
+            KeyCode::Back       =>  self.cpu.push_key(Key::Select),
+            _                   =>  (),
+        }
+    }
+    
+    fn key_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        keycode: KeyCode,
+        keymod: KeyMods
+    ) {
+        println!("Key released: {:?}, modifier {:?}",
+                keycode, keymod);
+
+        match keycode {
+            KeyCode::Left       =>  self.cpu.release_key(Key::Left),
+            KeyCode::Right      =>  self.cpu.release_key(Key::Right),
+            KeyCode::Up         =>  self.cpu.release_key(Key::Up),
+            KeyCode::Down       =>  self.cpu.release_key(Key::Down),
+            KeyCode::Z          =>  self.cpu.release_key(Key::A),
+            KeyCode::X          =>  self.cpu.release_key(Key::B),
+            KeyCode::Return     =>  self.cpu.release_key(Key::Start),
+            KeyCode::Back       =>  self.cpu.release_key(Key::Select),
             _                   =>  (),
         }
     }
@@ -120,6 +145,7 @@ impl EventHandler for MainWindow {
 pub fn run(path: &Path) {
     let (mut ctx, mut event_loop) =
        ContextBuilder::new("GBR", "Noboru")
+            .window_setup(ggez::conf::WindowSetup::default().vsync(true))
             .window_mode(ggez::conf::WindowMode::default().dimensions(SCREEN_WIDTH as f32, SCREEN_HEIGHT as f32))
             .build()
             .unwrap();

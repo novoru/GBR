@@ -46,7 +46,8 @@ impl Cartridge {
         let mbc = match bin[CARTRIDGE_TYPE] {
             // No MBC(ROM only)
             0x00    =>  Some(new_nombc()),
-            _       =>  unimplemented!(),
+            0x01    =>  Some(new_nombc()),
+            _       =>  unimplemented!("can't load: mbc type={}", bin[CARTRIDGE_TYPE]),
         };
 
         Cartridge {
