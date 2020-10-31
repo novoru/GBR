@@ -5,8 +5,6 @@ use std::fmt;
 
 bitflags!{
     struct P1: u8 {
-        const _BIT7 = 0b10000000;
-        const _BIT6 = 0b01000000;
         const P15   = 0b00100000;
         const P14   = 0b00010000;
         const P13   = 0b00001000;

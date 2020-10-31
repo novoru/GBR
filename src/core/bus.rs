@@ -133,7 +133,7 @@ impl Io for Bus {
             // Sprite Attribute Memory (OAM)
             0xFE00 ..= 0xFE9F   =>  self.ppu.read8(addr),
             // Empty but unusable for I/O
-            0xFEA0 ..= 0xFEFF   =>  panic!("unsupport read at {:04x}", addr),
+            0xFEA0 ..= 0xFEFF   =>  0,
             // I/O ports
             0xFF00              =>  self.pad.read8(),
             // 0xFF00 ..= 0xFF3B   =>  self.ioports.read8(addr),
@@ -142,12 +142,12 @@ impl Io for Bus {
             // LCD Registers
             0xFF40 ..= 0xFF4B   => self.ppu.read8(addr),
             // Empty but unusable for I/O
-            0xFF4C ..= 0xFF7F   =>  panic!("unsupport read at {:04x}", addr),
+            0xFF4C ..= 0xFF7F   =>  0,
             // Internal RAM
             0xFF80 ..= 0xFFFE   =>  self.hram.read8(addr&0x7F),
             // Interrupt Enable Register
             0xFFFF              =>  self.interrupt.read8(addr),
-            _                   =>  unimplemented!("0x{:04x}", addr),
+            _                   =>  0,
         }
     }
 

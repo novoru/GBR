@@ -5,9 +5,6 @@ use crate::core::io::Io;
 
 bitflags! {
     struct If: u8 {
-        const _BIT7     = 0b10000000;
-        const _BIT6     = 0b01000000;
-        const _BIT5     = 0b00100000;
         const JOYPAD    = 0b00010000;
         const SERIAL    = 0b00001000;
         const TIMER     = 0b00000100;
@@ -19,9 +16,6 @@ bitflags! {
 
 bitflags! {
     struct Ie: u8 {
-        const _BIT7     = 0b10000000;
-        const _BIT6     = 0b01000000;
-        const _BIT5     = 0b00100000;
         const JOYPAD    = 0b00010000;
         const SERIAL    = 0b00001000;
         const TIMER     = 0b00000100;

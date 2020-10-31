@@ -20,7 +20,6 @@ bitflags! {
 
 bitflags! {
     struct Stat: u8 {
-        const _BIT7         = 0b10000000;
         const INTR_LYC      = 0b01000000;
         const INTR_M2       = 0b00100000;
         const INTR_M1       = 0b00010000;

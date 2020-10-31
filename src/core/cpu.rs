@@ -14,11 +14,6 @@ bitflags! {
         const N     = 0b01000000;
         const H     = 0b00100000;
         const C     = 0b00010000;
-        const _BIT3 = 0b00001000;
-        const _BIT2 = 0b00000100;
-        const _BIT1 = 0b00000010;
-        const _BIT0 = 0b00000001;
-        const NONE  = 0b00000000;
     }
 }
 
@@ -150,7 +145,7 @@ impl Cpu {
     }
 
     fn read_af(&self) -> u16 {
-        ((self.a as i16) << 8) as u16 | self.f.bits as u16
+        ((self.a as i16) << 8) as u16 | self.f.bits() as u16
     }
 
     fn write_af(&mut self, data: u16) {
@@ -543,7 +538,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let e = cpu.fetch() as i8 as i16;
-                    cpu.pc = (cpu.pc as i16 + e) as u16;
+                    cpu.pc = ((cpu.pc as i16) + e) as u16;
                     Ok(())
                 },
             },
@@ -667,8 +662,8 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let e = cpu.fetch() as i8 as i16;
-                    if cpu.f & Flags::Z != Flags::Z {
-                        cpu.pc = (cpu.pc as i16 + e) as u16;
+                    if !cpu.f.contains(Flags::Z) {
+                        cpu.pc = ((cpu.pc as i16) + e) as u16;
                     }
                     Ok(())
                 },
@@ -767,19 +762,23 @@ impl Cpu {
                         if cpu.f.contains(Flags::H) || (a&0x0F) > 0x09 {
                             cpu.a = cpu.a.wrapping_add(0x06);
                         }
-                        if cpu.f.contains(Flags::C) || a > 0x9F {
+                        if cpu.f.contains(Flags::C) || a > 0x99 {
                             cpu.a = cpu.a.wrapping_add(0x60);
                             carry = true;
                         }
-                    } else {
-                        if cpu.f.contains(Flags::H) {
-                            cpu.a = cpu.a.wrapping_sub(0x06);
-                        }
-                        if cpu.f.contains(Flags::C) {
-                            cpu.a = cpu.a.wrapping_sub(0x60);
-                            carry = true;
-                        }
+                    } else if cpu.f.contains(Flags::C) {
+                        cpu.a = cpu.a.wrapping_add(
+                            if cpu.f.contains(Flags::H) {
+                                0x9A
+                            } else {
+                                0xA0
+                            }
+                        );
+                        carry = true;
+                    } else if cpu.f.contains(Flags::H) {
+                        cpu.a = cpu.a.wrapping_add(0xFA);
                     }
+
                     cpu.f.remove(Flags::H);
                     if cpu.a == 0 {
                         cpu.f.insert(Flags::Z);
@@ -800,8 +799,8 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let e = cpu.fetch() as i8 as i16;
-                    if cpu.f & Flags::Z == Flags::Z {
-                        cpu.pc = (cpu.pc as i16 + e) as u16;
+                    if cpu.f.contains(Flags::Z) {
+                        cpu.pc = ((cpu.pc as i16) + e) as u16;
                     }
                     Ok(())
                 },
@@ -919,7 +918,7 @@ impl Cpu {
                 operation:  |cpu| {
                     let e = cpu.fetch() as i8 as i16;
                     if cpu.f & Flags::C != Flags::C {
-                        cpu.pc = (cpu.pc as i16 + e) as u16;
+                        cpu.pc = ((cpu.pc as i16) + e)  as u16;
                     }
                     Ok(())
                 },
@@ -1025,8 +1024,8 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let e = cpu.fetch() as i8 as i16;
-                    if cpu.f & Flags::C == Flags::C {
-                        cpu.pc = (cpu.pc as i16 + e) as u16;
+                    if cpu.f.contains(Flags::C) {
+                        cpu.pc = ((cpu.pc as i16) + e) as u16;
                     }
                     Ok(())
                 },
@@ -3289,8 +3288,9 @@ impl Cpu {
                 opcode:     0xC2,
                 cycles:     12,
                 operation:  |cpu| {
-                    if cpu.f & Flags::Z != Flags::Z {
-                        cpu.pc = cpu.fetch16();
+                    let nn = cpu.fetch16();
+                    if !cpu.f.contains(Flags::Z) {
+                        cpu.pc = nn;
                     }
                     Ok(())
                 },
@@ -3399,8 +3399,9 @@ impl Cpu {
                 opcode:     0xCA,
                 cycles:     12,
                 operation:  |cpu| {
-                    if cpu.f & Flags::Z == Flags::Z {
-                        cpu.pc = cpu.fetch16();
+                    let nn = cpu.fetch16();
+                    if cpu.f.contains(Flags::Z) {
+                        cpu.pc = nn;
                     }
                     Ok(())
                 },
@@ -3510,8 +3511,9 @@ impl Cpu {
                 opcode:     0xD2,
                 cycles:     12,
                 operation:  |cpu| {
-                    if cpu.f & Flags::C != Flags::C {
-                        cpu.pc = cpu.fetch16();
+                    let nn = cpu.fetch16();
+                    if !cpu.f.contains(Flags::C) {
+                        cpu.pc = nn;
                     }
                     Ok(())
                 },
@@ -3613,8 +3615,9 @@ impl Cpu {
                 opcode:     0xDA,
                 cycles:     12,
                 operation:  |cpu| {
-                    if cpu.f & Flags::C != Flags::C {
-                        cpu.pc = cpu.fetch16();
+                    let nn = cpu.fetch16();
+                    if cpu.f.contains(Flags::C) {
+                        cpu.pc = nn;
                     }
                     Ok(())
                 },
