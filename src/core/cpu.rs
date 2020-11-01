@@ -29,6 +29,7 @@ pub struct Cpu {
     sp:     u16,
     pc:     u16,
     bus:    Bus,
+    halt:   bool,
     debug:  bool,
 }
 
@@ -53,10 +54,11 @@ impl Cpu {
             c:      0x13,
             e:      0xD8,
             l:      0x4D,
-            f:      Flags::Z | Flags::N | Flags::H | Flags::C,
+            f:      Flags::from_bits_truncate(0xB0),
             sp:     0xFFFE,
             pc:     0x100,
             bus:    Bus::no_cartridge(),
+            halt:   false,
             debug:  false,
         }
     }
@@ -70,10 +72,11 @@ impl Cpu {
             c:      0x13,
             e:      0xD8,
             l:      0x4D,
-            f:      Flags::Z | Flags::N | Flags::H | Flags::C,
+            f:      Flags::from_bits_truncate(0xB0),
             sp:     0xFFFE,
             pc:     0x100,
             bus:    Bus::from_path(path),
+            halt:   false,
             debug:  false,
         }
     }
@@ -98,17 +101,12 @@ impl Cpu {
     }
 
     fn step(&mut self) {
-        // if self.pc == 0x0150 {
-        //     println!("break");
-        //     self.debug = true;
-        // }
-        // if self.debug {
-        //     use std::io::stdin;
-        //     let mut input = String::new();
-        //     stdin().read_line(&mut input).unwrap();
-        //     println!("{}", self);
-        // }
-        
+        if self.halt {
+            if self.bus.has_irq() {
+                self.halt = false;
+            }
+            return;
+        }
         if self.bus.has_irq() && self.bus.is_enabled_irq() {
             self.resolve_irq();
             return;
@@ -119,14 +117,14 @@ impl Cpu {
     }
 
     fn resolve_irq(&mut self) {
+        let pc = self.pc;
+        self.push((pc>>8) as u8);
+        self.push((pc&0xFF) as u8);
+
         let addr = self.bus.isr_addr();
         if addr == None {
             return;
         }
-
-        let pc = self.pc;
-        self.push((pc>>8) as u8);
-        self.push((pc&0xFF) as u8);
 
         self.pc = addr.unwrap() as u16;
         self.bus.disable_irq();
@@ -1629,8 +1627,8 @@ impl Cpu {
                 name:       "HALT",
                 opcode:     0x76,
                 cycles:     4,
-                operation:  |_| {
-                    // TODO
+                operation:  |cpu| {
+                    cpu.halt = true;
                     Ok(())
                 },
             },            

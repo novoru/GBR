@@ -6,6 +6,7 @@ use crate::core::pad::{ Pad, Key };
 use crate::core::ppu::*;
 use crate::core::hram::HRam;
 use crate::core::apu::Apu;
+use crate::core::timer::Timer;
 
 use std::path::Path;
 
@@ -20,6 +21,7 @@ pub struct Bus {
     apu:        Apu,
     interrupt:  Interrupt,
     pad:        Pad,
+    pub timer:      Timer,
 }
 
 impl Bus {
@@ -32,6 +34,7 @@ impl Bus {
             apu:        Apu::new(),
             interrupt:  Interrupt::new(),
             pad:        Pad::new(),
+            timer:      Timer::new(),
         }
     }
 
@@ -44,6 +47,7 @@ impl Bus {
             apu:        Apu::new(),
             interrupt:  Interrupt::new(),
             pad:        Pad::new(),
+            timer:      Timer::new(),
         }
     }
 
@@ -112,6 +116,9 @@ impl Bus {
             },
             _                   =>  (),
         }
+        if self.timer.tick() {
+            self.interrupt.set_irq(InterruptKind::Timer);
+        };
     }
 }
 
@@ -137,6 +144,8 @@ impl Io for Bus {
             // I/O ports
             0xFF00              =>  self.pad.read8(),
             // 0xFF00 ..= 0xFF3B   =>  self.ioports.read8(addr),
+            // Timer
+            0xFF04 ..= 0xFF07   =>  self.timer.read8(addr),
             // Interrupt Flag Register
             0xFF0F              =>  self.interrupt.read8(addr),
             // LCD Registers
@@ -170,7 +179,9 @@ impl Io for Bus {
             // Empty but unusable for I/O
             0xFEA0 ..= 0xFEFF   =>  (),
             // I/O ports
-            0xFF00              =>  self.pad.write8(data),         
+            0xFF00              =>  self.pad.write8(data),
+            // Timer
+            0xFF04 ..= 0xFF07   =>  self.timer.write8(addr, data),
             // Sound Channel 1 - Tone & Sweep
             0xFF10 ..= 0xFF14   |
             // Sound Channel 2 - Tone

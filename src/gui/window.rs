@@ -103,9 +103,6 @@ impl EventHandler for MainWindow {
         keymod: KeyMods,
         repeat: bool
     ) {
-        println!("Key pressed: {:?}, modifier {:?}, repeat: {}",
-                keycode, keymod, repeat);
-
         match keycode {
             KeyCode::Left       =>  self.cpu.push_key(Key::Left),
             KeyCode::Right      =>  self.cpu.push_key(Key::Right),
@@ -145,7 +142,7 @@ impl EventHandler for MainWindow {
 pub fn run(path: &Path) {
     let (mut ctx, mut event_loop) =
        ContextBuilder::new("GBR", "Noboru")
-            .window_setup(ggez::conf::WindowSetup::default().vsync(true))
+            .window_setup(ggez::conf::WindowSetup::default().vsync(false))
             .window_mode(ggez::conf::WindowMode::default().dimensions(SCREEN_WIDTH as f32, SCREEN_HEIGHT as f32))
             .build()
             .unwrap();

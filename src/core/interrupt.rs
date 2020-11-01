@@ -31,6 +31,7 @@ const TIMER_ISR_ADDR:       usize = 0x0050;
 const SERIAL_ISR_ADDR:      usize = 0x0058;
 const JOYPAD_ISR_ADDR:      usize = 0x0060;
 
+#[derive(Debug)]
 pub enum InterruptKind {
     Vblank,
     LcdcStatus,

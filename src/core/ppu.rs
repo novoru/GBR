@@ -190,8 +190,8 @@ impl Io for Ppu {
                 self.oam_dma_started = true;
             },
             0xFF47  =>  self.bgp    = Bgp::from(data),
-            0xFF48  =>  self.obp0   = 0,
-            0xFF49  =>  self.obp1   = 0,
+            0xFF48  =>  self.obp0   = 0xFF,
+            0xFF49  =>  self.obp1   = 0xFF,
             0xFF4A  =>  self.wy     = data,
             0xFF4B  =>  self.wx     = data,
             // ToDo: LCD Color Palettes (CGB only)
@@ -242,15 +242,15 @@ impl Ppu {
         let mut lcdc_irq = false;
 
         if self.clock >= CYCLE_PER_LINE {
-            vblank_irq = true;
             if self.ly == SCREEN_HEIGHT as u8 {
+                vblank_irq = true;
                 self.build_sprite();
                 if self.stat.contains(Stat::INTR_LYC) {
                     lcdc_irq = true;
                 }
             } else if self.ly >= SCREEN_HEIGHT as u8 + LCD_BLANK_HEIGHT {
                 self.ly = 0;
-                // self.build_bg();
+                self.build_bg();
             } else if self.ly < SCREEN_HEIGHT as u8 {
                 self.build_bg();
                 // if self.window_enabled() {
