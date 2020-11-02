@@ -240,7 +240,7 @@ impl Ppu {
             } else if self.ly < SCREEN_HEIGHT as u8 {
                 self.build_bg();
                 if self.lcdc.contains(Lcdc::WIN_EN) {
-                    self.build_window_tile();
+                    self.build_window();
                 }
             }
 
@@ -276,6 +276,13 @@ impl Ppu {
 
     fn bg_tilemap_offset(&self) -> usize {
         match self.lcdc.contains(Lcdc::BG_MAP) {
+            false   =>  TILEMAP0_OFFSET,
+            true    =>  TILEMAP1_OFFSET
+        }
+    }
+    
+    fn window_tilemap_offset(&self) -> usize {
+        match self.lcdc.contains(Lcdc::WIN_MAP) {
             false   =>  TILEMAP0_OFFSET,
             true    =>  TILEMAP1_OFFSET
         }
@@ -387,8 +394,26 @@ impl Ppu {
         }
     }
 
-    fn build_window_tile(&mut self) {
+    fn build_window(&mut self) {
+        if (self.wx >= 167) && (self.wy >= 144) {
+            return;
+        }
+        if self.ly < self.wy {
+            return;
+        }
 
+        for x in 0..SCREEN_WIDTH as u8 {
+            let posx = self.wx.wrapping_sub(7);
+            let y = self.ly.wrapping_sub(self.wy) as u16 / 8 * 32;
+            let index = x.wrapping_sub(posx) as u16 / 8 % 32 + y;
+            let tileid = self.get_window_tileid(index);
+            let color = self.get_color(tileid, 
+                            x.wrapping_sub(posx)%8, 
+                            self.ly.wrapping_sub(self.wy)%8);
+            let base = self.ly as usize * SCREEN_WIDTH + x as usize;
+            self.pixels[base] = self.get_bg_palette()[color as usize];
+        }
+        
     }
 
     fn get_bg_palette(&self) -> [u8; 4] {
@@ -409,6 +434,11 @@ impl Ppu {
 
     fn get_tileid(&self, index: u16) -> u8 {
         let addr = index as usize + self.bg_tilemap_offset();
+        self.read8(addr)
+    }
+
+    fn get_window_tileid(&self, index: u16) -> u8 {
+        let addr = index as usize + self.window_tilemap_offset();
         self.read8(addr)
     }
 
