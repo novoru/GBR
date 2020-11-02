@@ -4,8 +4,6 @@ use ggez::graphics;
 use ggez::nalgebra::Point2;
 use ggez::timer;
 use std::path::Path;
-use std::thread;
-use std::time;
 
 use crate::core::cpu::Cpu;
 use crate::core::pad::Key;
@@ -58,10 +56,10 @@ impl MainWindow {
 
 impl EventHandler for MainWindow {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        for _ in 0..17556 {
+        for _ in 0..154*114 {
             self.cpu.tick();
-            self.update_pixels(self.cpu.get_pixels());
         }
+        self.update_pixels(self.cpu.get_pixels());
 
         if timer::ticks(ctx) % 100 == 0 {
             println!("Delta frame time: {:?} ", timer::delta(ctx));
@@ -100,8 +98,8 @@ impl EventHandler for MainWindow {
         &mut self,
         _ctx: &mut Context,
         keycode: KeyCode,
-        keymod: KeyMods,
-        repeat: bool
+        _keymod: KeyMods,
+        _repeat: bool
     ) {
         match keycode {
             KeyCode::Left       =>  self.cpu.push_key(Key::Left),
@@ -120,11 +118,8 @@ impl EventHandler for MainWindow {
         &mut self,
         _ctx: &mut Context,
         keycode: KeyCode,
-        keymod: KeyMods
+        _keymod: KeyMods
     ) {
-        println!("Key released: {:?}, modifier {:?}",
-                keycode, keymod);
-
         match keycode {
             KeyCode::Left       =>  self.cpu.release_key(Key::Left),
             KeyCode::Right      =>  self.cpu.release_key(Key::Right),

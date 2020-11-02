@@ -231,12 +231,12 @@ impl Ppu {
     }
 
     pub fn tick(&mut self) -> (Option<InterruptKind>, Option<InterruptKind>) {
-        self.clock += 4;
-        if !self.lcdc.contains(Lcdc::LCD_EN) {
-            return (None, None);
-        }
-
         self.update_mode();
+        self.clock += 4;
+
+        // if !self.lcdc.contains(Lcdc::LCD_EN) {
+        //     return (None, None);
+        // }
 
         let mut vblank_irq = false;
         let mut lcdc_irq = false;
@@ -248,14 +248,14 @@ impl Ppu {
                 if self.stat.contains(Stat::INTR_LYC) {
                     lcdc_irq = true;
                 }
-            } else if self.ly >= SCREEN_HEIGHT as u8 + LCD_BLANK_HEIGHT {
+            } else if self.ly >= (SCREEN_HEIGHT as u8 + LCD_BLANK_HEIGHT) {
                 self.ly = 0;
                 self.build_bg();
             } else if self.ly < SCREEN_HEIGHT as u8 {
                 self.build_bg();
-                // if self.window_enabled() {
-                    // self.build_window_tile();
-                // }
+                if self.lcdc.contains(Lcdc::WIN_EN) {
+                    self.build_window_tile();
+                }
             }
 
             if self.ly == self.lyc {
@@ -362,8 +362,8 @@ impl Ppu {
             let index = x.wrapping_add(self.scx) as u16 / 8 % 32 + y;
             let tileid = self.get_tileid(index);
             let color = self.get_color(tileid, 
-                                x.wrapping_add(self.scx)%8, 
-                                self.ly.wrapping_add(self.scy)%8);
+                            x.wrapping_add(self.scx)%8, 
+                            self.ly.wrapping_add(self.scy)%8);
             let base = self.ly as usize * SCREEN_WIDTH + x as usize;
             self.pixels[base] = color;
         }
@@ -373,8 +373,13 @@ impl Ppu {
         if !self.sprite_on() {
             return;
         }
+        
         for attr in self.oam.iter() {
             let height = self.sprite_size();
+            if attr.x == 0 {
+                continue;
+            }
+
             for x in 0..8 as u8 {
                 for y in 0.. height {
                     if  x.wrapping_add(attr.offsetx()) == 0 ||
@@ -388,13 +393,14 @@ impl Ppu {
 
                     let mut posx = x;
                     let mut posy = y;
+
                     if attr.is_xflip() {
                         posx = 7 - x;
                     }
                     if attr.is_yflip() {
                         posy = 7 - y;
                     }
-                    let color = self.get_color(attr.tileid(), x%8, y%8);
+                    let color = self.get_sprite_color(attr.tileid(), x%8, y%height, height);
                     let base = posx.wrapping_add(attr.offsetx()) as usize
                                 + (posy.wrapping_add(attr.offsety()) as usize * SCREEN_WIDTH);
                     self.pixels[base] = color;
@@ -403,16 +409,30 @@ impl Ppu {
         }
     }
 
+    fn build_window_tile(&mut self) {
+        
+    }
+
     fn get_tileid(&self, index: u16) -> u8 {
         let addr = index as usize + self.bg_tilemap_offset();
         self.read8(addr)
     }
 
+    fn get_tile_addr(&self, tileid: u8) -> usize {
+        let offset = self.tiledata_offset();
+
+        if offset == TILEDATA0_OFFSET {
+            return (tileid.wrapping_add(0x80) as usize) * 0x10 + TILEDATA0_OFFSET;
+        }
+
+        offset + (tileid as usize * 0x10)
+    }
+
     fn get_color(&self, tileid: u8, x: u8, y: u8) -> u8 {
-        let addr = tileid as usize * 0x10 + self.tiledata_offset();
+        let addr = self.get_tile_addr(tileid);
         let mut pixels = Vec::new();
 
-        for i in 0..8 {
+        for i in 0..8 as usize {
             let line1 = self.read8(addr+i*2);
             let line2 = self.read8(addr+i*2+1);
             for j in 0..8 {
@@ -424,7 +444,23 @@ impl Ppu {
 
         pixels[(x+y*8) as usize]
     }
+    
+    fn get_sprite_color(&self, tileid: u8, x: u8, y: u8, height: u8) -> u8 {
+        let addr = tileid as usize * 0x10 + TILEDATA1_OFFSET;
+        let mut pixels = Vec::new();
 
+        for i in 0..height as usize {
+            let line1 = self.read8(addr+i*2);
+            let line2 = self.read8(addr+i*2+1);
+            for j in 0..8 {
+                let msb = (line1 >> (7-j)) & 0x01;
+                let lsb = (line2 >> (7-j)) & 0x01;
+                pixels.push((msb<<1)+lsb);
+            }
+        }
+
+        pixels[(x+y*8) as usize]
+    }
 }
 
 
