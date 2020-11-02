@@ -1,4 +1,3 @@
-#[macro_use]
 use bitflags::*;
 
 use crate::core::io::Io;

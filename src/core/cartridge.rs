@@ -5,7 +5,7 @@ use std::path::Path;
 use std::fs::read;
 use std::fmt;
 
-const ROM_SIZE:             usize   = 32768;
+const _ROM_SIZE:             usize   = 32768;
 const TITLE_START:          usize   = 0x134;
 const TITLE_END:            usize   = 0x142;
 // const LICENSEE_CODE_START:  usize   = 0x144;
@@ -29,9 +29,9 @@ impl fmt::Display for Cartridge {
 }
 
 impl Cartridge {
-    pub fn no_cartridge() -> Self {
+    pub fn _no_cartridge() -> Self {
         Cartridge {
-            rom:        vec![0; ROM_SIZE],
+            rom:        vec![0; _ROM_SIZE],
             title:      "NO CARTRIDGE".to_string(),
             mbc:        None,
         }

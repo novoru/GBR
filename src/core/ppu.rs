@@ -1,4 +1,3 @@
-#[macro_use]
 use bitflags::*;
 
 use crate::core::io::Io;
@@ -106,9 +105,9 @@ pub const SCREEN_HEIGHT:    usize   = 144;
 const LCD_BLANK_HEIGHT: u8 = 10;
 // const VRAM_SIZE:        usize   = 8192;
 const OAM_SPRITES:      usize   = 40;
-const OAM_OFFSET:       usize   = 0xFE00;
-const LCDC_ADDR:        usize   = 0xFF40;
-const STAT_ADDR:        usize   = 0xFF41;
+// const OAM_OFFSET:       usize   = 0xFE00;
+// const LCDC_ADDR:        usize   = 0xFF40;
+// const STAT_ADDR:        usize   = 0xFF41;
 const CYCLE_PER_LINE: u16 = 456;
 const TILEMAP0_OFFSET: usize = 0x9800;
 const TILEMAP1_OFFSET: usize = 0x9C00;
@@ -225,10 +224,6 @@ impl Ppu {
         self.update_mode();
         self.clock += 4;
 
-        // if !self.lcdc.contains(Lcdc::LCD_EN) {
-        //     return (None, None);
-        // }
-
         let mut vblank_irq = false;
         let mut lcdc_irq = false;
 
@@ -293,16 +288,6 @@ impl Ppu {
         }
     }
 
-    fn _mode(&self) -> PpuMode {
-        match self.read8(STAT_ADDR) & 0x03 {
-            0x00    =>  PpuMode::HBlank,
-            0x01    =>  PpuMode::VBlank,
-            0x02    =>  PpuMode::SearchingOAM,
-            0x03    =>  PpuMode::TransferPixels,
-            _       =>  panic!(),
-        }
-    }
-
     fn switch_mode(&mut self, mode: PpuMode) {
         match mode {
             PpuMode::HBlank   =>  {
@@ -357,10 +342,6 @@ impl Ppu {
                             self.ly.wrapping_add(self.scy)%8);
             let base = self.ly as usize * SCREEN_WIDTH + x as usize;
             self.pixels[base] = self.get_bg_palette()[color as usize];
-            // if x.wrapping_add(self.scx) == 3 && self.ly.wrapping_add(self.scy) == 3 {
-            //     println!("color={:?}", color);
-            //     println!("pixels[{}]={:?}", base, self.pixels[base]);
-            // }
         }
     }
 

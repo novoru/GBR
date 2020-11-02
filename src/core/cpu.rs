@@ -1,4 +1,3 @@
-#[macro_use]
 use bitflags::*;
 use std::fmt;
 use std::path::Path;
@@ -30,7 +29,6 @@ pub struct Cpu {
     pc:     u16,
     bus:    Bus,
     halt:   bool,
-    debug:  bool,
 }
 
 impl fmt::Display for Cpu {
@@ -45,7 +43,7 @@ impl fmt::Display for Cpu {
 }
 
 impl Cpu {
-    pub fn new() -> Self {
+    pub fn _new() -> Self {
         Cpu {
             a:      0x01,
             b:      0x00,
@@ -57,9 +55,8 @@ impl Cpu {
             f:      Flags::from_bits_truncate(0xB0),
             sp:     0xFFFE,
             pc:     0x100,
-            bus:    Bus::no_cartridge(),
+            bus:    Bus::_no_cartridge(),
             halt:   false,
-            debug:  false,
         }
     }
     
@@ -77,7 +74,6 @@ impl Cpu {
             pc:     0x100,
             bus:    Bus::from_path(path),
             halt:   false,
-            debug:  false,
         }
     }
 
@@ -142,11 +138,11 @@ impl Cpu {
         ((hi as i16) << 8) as u16 | lo as u16
     }
 
-    fn read_af(&self) -> u16 {
+    fn _read_af(&self) -> u16 {
         ((self.a as i16) << 8) as u16 | self.f.bits() as u16
     }
 
-    fn write_af(&mut self, data: u16) {
+    fn _write_af(&mut self, data: u16) {
         self.a = (data >> 8) as u8;
         self.f = Flags::from_bits_truncate((data & 0xFF) as u8);
     }
@@ -915,7 +911,7 @@ impl Cpu {
                 cycles:     8,
                 operation:  |cpu| {
                     let e = cpu.fetch() as i8 as i16;
-                    if cpu.f & Flags::C != Flags::C {
+                    if !cpu.f.contains(Flags::C) {
                         cpu.pc = ((cpu.pc as i16) + e)  as u16;
                     }
                     Ok(())
@@ -1127,7 +1123,7 @@ impl Cpu {
                 opcode:     0x3F,
                 cycles:     4,
                 operation:  |cpu| {
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         cpu.f.remove(Flags::C);
                     } else {
                         cpu.f.insert(Flags::C);
@@ -3312,7 +3308,7 @@ impl Cpu {
                     let hi = cpu.bus.read8(cpu.pc as usize);
                     cpu.pc += 1;
                     let nn = ((hi as u16) << 8) | lo as u16;
-                    if cpu.f & Flags::Z != Flags::Z {
+                    if !cpu.f.contains(Flags::Z) {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
                         cpu.pc = nn;
@@ -3373,7 +3369,7 @@ impl Cpu {
                 opcode:     0xC8,
                 cycles:     8,
                 operation:  |cpu| {
-                    if cpu.f & Flags::Z == Flags::Z {
+                    if cpu.f.contains(Flags::Z) {
                         let lo = cpu.pop();
                         let hi = cpu.pop();
                         cpu.pc = ((hi as i16) << 8) as u16 + lo as u16;
@@ -3418,7 +3414,7 @@ impl Cpu {
                     let hi = cpu.bus.read8(cpu.pc as usize);
                     cpu.pc += 1;
                     let nn = ((hi as u16) << 8) | lo as u16;
-                    if cpu.f & Flags::Z == Flags::Z {
+                    if cpu.f.contains(Flags::Z) {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
                         cpu.pc = nn;
@@ -3486,7 +3482,7 @@ impl Cpu {
                 opcode:     0xD0,
                 cycles:     8,
                 operation:  |cpu| {
-                    if cpu.f & Flags::C != Flags::C {
+                    if !cpu.f.contains(Flags::C) {
                         let lo = cpu.pop();
                         let hi = cpu.pop();
                         cpu.pc = ((hi as i16) << 8) as u16 + lo as u16;
@@ -3527,7 +3523,7 @@ impl Cpu {
                     let hi = cpu.bus.read8(cpu.pc as usize);
                     cpu.pc += 1;
                     let nn = ((hi as u16) << 8) | lo as u16;
-                    if cpu.f & Flags::C != Flags::C {
+                    if !cpu.f.contains(Flags::C) {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
                         cpu.pc = nn;
@@ -3588,7 +3584,7 @@ impl Cpu {
                 opcode:     0xD8,
                 cycles:     8,
                 operation:  |cpu| {
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         let lo = cpu.pop();
                         let hi = cpu.pop();
                         cpu.pc = ((hi as i16) << 8) as u16 + lo as u16;
@@ -3631,7 +3627,7 @@ impl Cpu {
                     let hi = cpu.bus.read8(cpu.pc as usize);
                     cpu.pc += 1;
                     let nn = ((hi as u16) << 8) | lo as u16;
-                    if cpu.f & Flags::C == Flags::C {
+                    if cpu.f.contains(Flags::C) {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
                         cpu.pc = nn;
@@ -7560,727 +7556,4 @@ impl fmt::Display for Instruction {
         write!(f, "Instruction {{ name='{}', cycles={}, opcode=0x{:02x} }}",
             self.name, self.cycles, self.opcode)
     }
-}
-
-// tests
-
-#[test]
-fn test_ldbn() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x06;
-
-    cpu.bus.write8(0x00, opcode);
-    cpu.bus.write8(0x01, 42);
-    cpu.tick();
-    
-    assert_eq!(cpu.b, 42);
-    assert_eq!(cpu.decode(opcode).to_string(), 
-            "Instruction { name='LD B, n', cycles=8, opcode=0x06 }")
-}
-
-#[test]
-fn test_ldr1r2() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x7E;
-    let addr = 0xFF;
-
-    cpu.write_hl(addr);
-
-    cpu.bus.write8(0x00, opcode);
-    cpu.bus.write8(addr as usize, 42);
-    cpu.tick();
-    
-    assert_eq!(cpu.a, 42);
-    assert_eq!(cpu.decode(opcode).to_string(), 
-            "Instruction { name='LD A, (HL)', cycles=8, opcode=0x7e }")
-}
-
-#[test]
-fn test_push() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xF5;  // PUSH AF
-
-    cpu.write_af(0xaadd);
-    cpu.sp = 0xFF;
-
-    cpu.bus.write8(0x00, opcode);
-    cpu.tick();
-
-    assert_eq!(cpu.bus.read8((cpu.sp+1) as usize), 0xaa);
-    assert_eq!(cpu.bus.read8((cpu.sp) as usize), 0xdd);
-    assert_eq!(cpu.decode(opcode).to_string(), 
-            "Instruction { name=\'PUSH AF\', cycles=16, opcode=0xf5 }")
-}
-
-#[test]
-fn test_pop() {    
-    let mut cpu = Cpu::new();
-    let op_push = 0xC5;     // PUSH BC
-    let op_pop = 0xE1;      // POP hl
-
-    cpu.sp = 0xFF;
-    cpu.write_bc(0xaadd);
-    
-    cpu.bus.write8(0x00, op_push);
-    cpu.bus.write8(0x01, op_pop);
-    cpu.tick();
-    cpu.tick();
-
-    assert_eq!(cpu.h, 0xaa);
-    assert_eq!(cpu.l, 0xdd);
-    assert_eq!(cpu.decode(op_pop).to_string(), 
-            "Instruction { name=\'POP HL\', cycles=12, opcode=0xe1 }")
-}
-
-#[test]
-fn test_ldhl_sp_n() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xF8;      // LDHL SP, n
-    let n = 0xFA;           // n = -6
-
-    cpu.sp = 0x30;          // sp = 48
-    
-    cpu.bus.write8(0x00, opcode);   // hl = sp + n = 48 + (-6)
-    cpu.bus.write8(0x01, n as u8);
-    cpu.tick();
-
-    assert_eq!(cpu.l, 0x2A);
-    assert_eq!(cpu.decode(opcode).to_string(), 
-            "Instruction { name=\'LDHL SP, n\', cycles=12, opcode=0xf8 }")
-}
-
-#[test]
-fn test_addan() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x80;      // ADD A, B
-    cpu.a = 32;
-    cpu.b = 10;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a + b
-    cpu.tick();
-
-    assert_eq!(cpu.a, 42);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
-
-    cpu.pc = 0;
-    cpu.a = 0x08;
-    cpu.b = 0x08;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a + b
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0x10);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, true);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
-    
-    cpu.pc = 0;
-    cpu.a = 0x80;
-    cpu.b = 0x80;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a + b
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, true);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, true);
-}
-
-#[test]
-fn test_adcan() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x88;      // ADC A, B
-    cpu.a = 32;
-    cpu.b = 9;
-    cpu.f.insert(Flags::C);
-    
-    cpu.bus.write8(0x00, opcode);   // a = a + b + carry flag
-    cpu.tick();
-
-    assert_eq!(cpu.a, 42);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
-
-    cpu.pc = 0;
-    cpu.a = 0x08;
-    cpu.b = 0x07;
-    cpu.f.insert(Flags::C);
-    
-    cpu.bus.write8(0x00, opcode);   // a = a + b + carry flag
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0x10);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, true);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
-    
-    cpu.pc = 0;
-    cpu.a = 0x80;
-    cpu.b = 0x7F;
-    cpu.f.insert(Flags::C);
-    
-    cpu.bus.write8(0x00, opcode);   // a = a + b + carry flag
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, true);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, false);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, true);
-}
-
-#[test]
-fn test_suban() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x90;      // SUB A, B
-    cpu.a = 0x0F;
-    cpu.b = 0x0F;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a - b
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0x00);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, true);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
-
-    cpu.pc = 0;
-    cpu.a = 0x20;
-    cpu.b = 0x12;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a - b
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0x0E);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, true);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
-    
-    cpu.pc = 0;
-    cpu.a = 0xE0;
-    cpu.b = 0xF0;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a - b
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0xF0);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, true);
-}
-
-#[test]
-fn test_sbcan() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x98;      // SBC A, B
-    cpu.a = 0x0F;
-    cpu.b = 0x0E;
-    cpu.f.insert(Flags::C);
-    
-    cpu.bus.write8(0x00, opcode);   // a = a - b - carry flag
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0x00);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, true);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
-
-    cpu.pc = 0;
-    cpu.a = 0x20;
-    cpu.b = 0x11;
-    cpu.f.insert(Flags::C);
-    
-    cpu.bus.write8(0x00, opcode);   // a = a - b - carry flag
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0x0E);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, true);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
-    
-    cpu.pc = 0;
-    cpu.a = 0xE0;
-    cpu.b = 0xEF;
-    cpu.f.insert(Flags::C);
-    
-    cpu.bus.write8(0x00, opcode);   // a = a - b - carry flag
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0xF0);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, false);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, true);
-}
-
-#[test]
-fn test_and() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xA0;      // AND A, B
-    cpu.a = 0b1111_1010;
-    cpu.b = 0b0000_1111;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a & b
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0b0000_1010);
-}
-
-#[test]
-fn test_or() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xB0;      // OR A, B
-    cpu.a = 0b1011_0000;
-    cpu.b = 0b0000_1101;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a | b
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0b1011_1101);
-}
-
-#[test]
-fn test_xor() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xA8;      // XOR A, B
-    cpu.a = 0b1010_0000;
-    cpu.b = 0b0000_0011;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a ^ b
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0b1010_0011);
-}
-
-#[test]
-fn test_cp() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xB8;      // CP A, B
-    cpu.a = 0b0000_1111;
-    cpu.b = 0b0000_1111;
-    
-    cpu.bus.write8(0x00, opcode);   // a == b
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0b0000_1111);
-    assert_eq!((cpu.f & Flags::Z) == Flags::Z, true);
-    assert_eq!((cpu.f & Flags::N) == Flags::N, true);
-    assert_eq!((cpu.f & Flags::H) == Flags::H, false);
-    assert_eq!((cpu.f & Flags::C) == Flags::C, false);
-}
-
-#[test]
-fn test_inc() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x3C;      // INC A
-    cpu.a = 0;
-    
-    cpu.bus.write8(0x00, opcode);   // a += 1
-    cpu.tick();
-
-    assert_eq!(cpu.a, 1);
-}
-
-#[test]
-fn test_dec() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x3D;      // DEC A
-    cpu.a = 0;
-    
-    cpu.bus.write8(0x00, opcode);   // a += 1
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0xFF);
-}
-
-#[test]
-fn test_addhln() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x09;      // ADD HL, BC
-    cpu.write_hl(0xFFF0);
-    cpu.write_bc(0x10);
-    
-    cpu.bus.write8(0x00, opcode);   // a = hl + bc
-    cpu.tick();
-
-    assert_eq!(cpu.read_hl(), 0x00);
-}
-
-#[test]
-fn test_addspn() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xE8;      // ADD SP, #
-    cpu.sp = 0xFFF0;
-    
-    cpu.bus.write8(0x00, opcode);   // a = sp + #
-    cpu.bus.write8(0x01, 0x10);
-    cpu.tick();
-
-    assert_eq!(cpu.sp, 0x00);
-}
-
-#[test]
-fn test_incnn() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x03;      // INC BC
-    cpu.write_bc(0xFFF0);
-    
-    cpu.bus.write8(0x00, opcode);   // a = bc + 1
-    cpu.tick();
-
-    assert_eq!(cpu.read_bc(), 0xFFF1);
-}
-
-#[test]
-fn test_decnn() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x0B;      // DEC BC
-    cpu.write_bc(0xFFF0);
-    
-    cpu.bus.write8(0x00, opcode);   // a = bc - 1
-    cpu.tick();
-
-    assert_eq!(cpu.read_bc(), 0xFFEF);
-}
-
-#[test]
-fn test_rlca() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x07;      // RLCA
-    cpu.a = 0b1001_1001;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a.rotate_shift(1)
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0b0011_0011);
-}
-
-#[test]
-fn test_rla() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x17;      // RLA
-    cpu.a = 0b1001_1001;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a.rotate_shift(1)
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0b0011_0010);
-}
-
-#[test]
-fn test_rrca() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x0F;      // RRCA
-    cpu.a = 0b1001_1001;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a.rotate_right(1)
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0b1100_1100);
-}
-
-#[test]
-fn test_rra() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x1F;      // RRA
-    cpu.a = 0b1001_1001;
-    
-    cpu.bus.write8(0x00, opcode);   // a = a.rotate_right(1)
-    cpu.tick();
-
-    assert_eq!(cpu.a, 0b0100_1100);
-}
-
-#[test]
-fn test_rlcb() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x00;      // RLC B
-    cpu.b = 0b1001_1001;
-    
-    cpu.bus.write8(0x00, 0xCB);
-    cpu.bus.write8(0x01, opcode);   // b = b.rotate_left(1)
-    cpu.tick();
-
-    assert_eq!(cpu.b, 0b0011_0011);
-}
-
-#[test]
-fn test_rlb() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x10;      // RL B
-    cpu.b = 0b1001_1001;
-    
-    cpu.bus.write8(0x00, 0xCB);
-    cpu.bus.write8(0x01, opcode);   // b = b.rotate_left(1)
-    cpu.tick();
-
-    assert_eq!(cpu.b, 0b0011_0010);
-}
-
-#[test]
-fn test_rrc() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x08;      // RRC B
-    cpu.b = 0b1001_1001;
-    
-    cpu.bus.write8(0x00, 0xCB);
-    cpu.bus.write8(0x01, opcode);   // b = b.rotate_right(1)
-    cpu.tick();
-
-    assert_eq!(cpu.b, 0b0100_1100);
-}
-
-#[test]
-fn test_rrn() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x18;      // RR B
-    cpu.b = 0b1001_1001;
-    
-    cpu.bus.write8(0x00, 0xCB);
-    cpu.bus.write8(0x01, opcode);   // b = b.rotate_right(1)
-    cpu.tick();
-
-    assert_eq!(cpu.b, 0b0100_1100);
-}
-
-#[test]
-fn test_slan() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x18;      // SLA B
-    cpu.b = 0b1001_1001;
-    
-    cpu.bus.write8(0x00, 0xCB);
-    cpu.bus.write8(0x01, opcode);   // b = b << 1
-    cpu.tick();
-
-    assert_eq!(cpu.b, 0b0100_1100);
-}
-
-#[test]
-fn test_sran() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x28;      // SRA B
-    cpu.b = 0b1001_1001;
-    
-    cpu.bus.write8(0x00, 0xCB);
-    cpu.bus.write8(0x01, opcode);   // b = b >> 1
-    cpu.tick();
-
-    assert_eq!(cpu.b, 0b1100_1100);
-}
-
-#[test]
-fn test_srln() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x38;      // SRL B
-    cpu.b = 0b1001_1001;
-    
-    cpu.bus.write8(0x00, 0xCB);
-    cpu.bus.write8(0x01, opcode);   // b = b >> 1
-    cpu.tick();
-
-    assert_eq!(cpu.b, 0b0100_1100);
-}
-
-#[test]
-fn test_bitbr() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x47;      // BIT 0, A
-    cpu.a = 0b0000_0000;
-    
-    cpu.bus.write8(0x00, 0xCB);
-    cpu.bus.write8(0x01, opcode);   // if b & 0x01 == 0 { Flags::Z = 0; }
-    cpu.tick();
-
-    assert_eq!(cpu.f & Flags::Z == Flags::Z, true);
-}
-
-#[test]
-fn test_setbr() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xC0;      // SET 0, B
-    cpu.a = 0b0000_0000;
-    
-    cpu.bus.write8(0x00, 0xCB);
-    cpu.bus.write8(0x01, opcode);   // b |= 0x01
-    cpu.tick();
-
-    assert_eq!(cpu.b, 0x01);
-}
-
-#[test]
-fn test_resbr() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xA0;      // RES 4, B
-    cpu.b = 0b1111_1111;
-    
-    cpu.bus.write8(0x00, 0xCB);
-    cpu.bus.write8(0x01, opcode);   // b &= !0x10
-    cpu.tick();
-
-    assert_eq!(cpu.b, 0b1110_1111);
-}
-
-#[test]
-fn test_jpnn() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xC3;      // JP nn
-    
-    cpu.bus.write8(0x00, opcode);
-    cpu.bus.write8(0x01, 0x12);
-    cpu.bus.write8(0x02, 0x34);
-    cpu.tick();
-
-    assert_eq!(cpu.pc, 0x3412);
-}
-
-#[test]
-fn test_jpccnn() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xC2;      // JP NZ, nn
-
-    cpu.bus.write8(0x00, opcode);
-    cpu.bus.write8(0x01, 0x12);
-    cpu.bus.write8(0x02, 0x34);
-    cpu.tick();
-
-    assert_eq!(cpu.pc, 0x3412);
-}
-
-#[test]
-fn test_jphl() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xE9;      // JP (HL)
-
-    cpu.write_hl(0x1234);
-
-    cpu.bus.write8(0x00, opcode);
-    cpu.tick();
-
-    assert_eq!(cpu.pc, 0x1234);
-}
-
-#[test]
-fn test_jre() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x18;      // JR e
-
-    cpu.write_hl(0x1234);
-
-    cpu.bus.write8(0x00, opcode);
-    cpu.bus.write8(0x01, -2 as i8 as u8);
-    cpu.tick();
-
-    assert_eq!(cpu.pc, 0x00);
-}
-
-#[test]
-fn test_jrcce() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0x20;      // JR NZ e
-
-    cpu.bus.write8(0x00, opcode);
-    cpu.bus.write8(0x01, -2 as i8 as u8);
-    cpu.tick();
-
-    assert_eq!(cpu.pc, 0x00);
-}
-
-#[test]
-fn test_callnn() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xCD;      // CALL nn
-    cpu.sp = 0x100;
-
-    cpu.bus.write8(0x00, opcode);
-    cpu.bus.write8(0x01, 0x12);
-    cpu.bus.write8(0x02, 0x34);
-    cpu.tick();
-
-    assert_eq!(cpu.pc, 0x3412);
-    assert_eq!(cpu.sp, 0x00FE);
-    assert_eq!(cpu.bus.read8(cpu.sp as usize), 0x03);
-}
-
-#[test]
-fn test_rstn() {    
-    let mut cpu = Cpu::new();
-    let opcode = 0xFF;      // RST 0x38
-    cpu.sp = 0x100;
-
-    cpu.bus.write8(0x00, opcode);
-    cpu.tick();
-
-    assert_eq!(cpu.pc, 0x0038);
-    assert_eq!(cpu.sp, 0x00FE);
-    let lo = cpu.bus.read8(cpu.sp as usize) as u16;
-    let hi = (cpu.bus.read8((cpu.sp+1) as usize) as u16) << 8 ;
-    assert_eq!(hi | lo, 0x01);
-    // assert_eq!(cpu.bus.read16(cpu.sp as usize), 0x01);
-}
-
-#[test]
-fn test_ret() {    
-    let mut cpu = Cpu::new();
-    let opcode1 = 0xC5;     // PUSH BC
-    let opcode2 = 0xC9;     // RET
-    cpu.sp = 0x100;
-    cpu.write_bc(0x1234);
-
-    cpu.bus.write8(0x00, opcode1);
-    cpu.bus.write8(0x01, opcode2);
-    cpu.tick();
-    cpu.tick();
-
-    assert_eq!(cpu.pc, 0x1234);
-    assert_eq!(cpu.sp, 0x0100);
-}
-
-#[test]
-fn test_retcc() {    
-    let mut cpu = Cpu::new();
-    let opcode1 = 0xC5;     // PUSH BC
-    let opcode2 = 0xC0;     // RET NZ
-    cpu.sp = 0x100;
-    cpu.write_bc(0x1234);
-
-    cpu.bus.write8(0x00, opcode1);
-    cpu.bus.write8(0x01, opcode2);
-    cpu.tick();
-    cpu.tick();
-
-    assert_eq!(cpu.pc, 0x1234);
-    assert_eq!(cpu.sp, 0x0100);
-}
-
-#[test]
-fn test_reti() {    
-    let mut cpu = Cpu::new();
-    let opcode1 = 0xC5;     // PUSH BC
-    let opcode2 = 0xD9;     // RETI
-    cpu.sp = 0x100;
-    cpu.write_bc(0x1234);
-
-    cpu.bus.write8(0x00, opcode1);
-    cpu.bus.write8(0x01, opcode2);
-    cpu.tick();
-    cpu.tick();
-
-    assert_eq!(cpu.pc, 0x1234);
-    assert_eq!(cpu.sp, 0x0100);
-    assert_eq!(cpu.bus.read8(0xFFFF as usize), 0b11111)
 }

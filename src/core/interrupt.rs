@@ -1,4 +1,3 @@
-#[macro_use]
 use bitflags::*;
 
 use crate::core::io::Io;
@@ -146,7 +145,7 @@ impl Interrupt {
         }
     }
 
-    pub fn is_set(&self, kind: InterruptKind) -> bool {
+    pub fn _is_set(&self, kind: InterruptKind) -> bool {
         match kind {
             InterruptKind::Vblank       =>  self.irqf.contains(If::VBLANK),
             InterruptKind::LcdcStatus   =>  self.irqf.contains(If::LCDC),

@@ -25,9 +25,9 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn no_cartridge() -> Self {
+    pub fn _no_cartridge() -> Self {
         Bus {
-            cartridge:  Cartridge::no_cartridge(),
+            cartridge:  Cartridge::_no_cartridge(),
             ram:        Ram::new(),
             hram:       HRam::new(),
             ppu:        Ppu::new(),
@@ -69,10 +69,6 @@ impl Bus {
 
     pub fn has_irq(&self) -> bool {
         self.interrupt.has_irq()
-    }
-
-    pub fn has_irq_from_kind(&self, kind: InterruptKind) -> bool {
-        self.interrupt.is_set(kind)
     }
 
     pub fn push_key(&mut self, key: Key) {
