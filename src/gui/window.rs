@@ -11,11 +11,12 @@ use crate::core::pad::Key;
 const SCREEN_WIDTH:     u32 = 160;
 const SCREEN_HEIGHT:    u32 = 144;
 
-const COLORS: [[u8; 4]; 4] = [
-    [0x0F, 0x38, 0x0F, 0xFF],
-    [0x30, 0x62, 0x30, 0xFF],
-    [0x8B, 0xAC, 0x0F, 0xFF],
-    [0x9B, 0xBC, 0x0F, 0xFF],
+const COLORS: [[u8; 4]; 5] = [
+    [0x9B, 0xBC, 0x0F, 0xFF],   // Lightest Green (#9BBC0F)
+    [0x8B, 0xAC, 0x0F, 0xFF],   // Light Green (#8BAC0F)
+    [0x30, 0x62, 0x30, 0xFF],   // Dark Green (#306230)
+    [0x0F, 0x38, 0x0F, 0xFF],   // Darkest Green (#0F380F)
+    [0x8F, 0x7B, 0x13, 0xFF],   // LCD OFF
 ];
 
 pub struct MainWindow {
@@ -30,7 +31,7 @@ impl MainWindow {
         MainWindow {
             cpu:        Cpu::from_path(path),
             palette:    MainWindow::get_init_palette(ctx),
-            pixels:     [3; (SCREEN_WIDTH*SCREEN_HEIGHT) as usize],
+            pixels:     [4; (SCREEN_WIDTH*SCREEN_HEIGHT) as usize],
         }
     }
 

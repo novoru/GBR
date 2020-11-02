@@ -32,19 +32,19 @@ bitflags! {
 
 #[derive(Debug)]
 pub enum Color {
-    Darkest     = 0,
-    Dark        = 1,
-    Light       = 2,
-    Lightest    = 3,
+    Darkest     = 3,
+    Dark        = 2,
+    Light       = 1,
+    Lightest    = 0,
 }
 
 impl From<u8> for Color {
     fn from(item: u8) -> Self {
         match item {
-            0x00    =>  Color::Darkest,
-            0x01    =>  Color::Dark,
-            0x02    =>  Color::Light,
-            0x03    =>  Color::Lightest,
+            0x03    =>  Color::Darkest,
+            0x02    =>  Color::Dark,
+            0x01    =>  Color::Light,
+            0x00    =>  Color::Lightest,
             _       =>  panic!(),
         }
     }
@@ -53,30 +53,30 @@ impl From<u8> for Color {
 impl Color {
     pub fn to_u8(&self) -> u8 {
         match self {
-            Color::Darkest  =>  0,
-            Color::Dark     =>  1,
-            Color::Light    =>  2,
-            Color::Lightest =>  3,
+            Color::Darkest  =>  3,
+            Color::Dark     =>  2,
+            Color::Light    =>  1,
+            Color::Lightest =>  0,
         }
     }
 }
 
 #[derive(Debug)]
-struct Bgp {
+struct Palette {
     dot_11: Color,
     dot_10: Color,
     dot_01: Color,
     dot_00: Color,
 }
 
-impl From<u8> for Bgp {
+impl From<u8> for Palette {
     fn from(item: u8) -> Self {
         let dot_11 = Color::from((item >> 6) & 0x03);
         let dot_10 = Color::from((item >> 4) & 0x03);
         let dot_01 = Color::from((item >> 2) & 0x03);
         let dot_00 = Color::from(item & 0x03);
 
-        Bgp {
+        Palette {
             dot_11: dot_11,
             dot_10: dot_10,
             dot_01: dot_01,
@@ -85,16 +85,7 @@ impl From<u8> for Bgp {
     }
 }
 
-impl Bgp {
-    pub fn new() -> Self {
-        Bgp {
-            dot_11: Color::Darkest,
-            dot_10: Color::Darkest,
-            dot_01: Color::Darkest,
-            dot_00: Color::Darkest,
-        }
-    }
-
+impl Palette {
     pub fn to_u8(&self) -> u8 {
         self.dot_11.to_u8() << 6 |
         self.dot_10.to_u8() << 4 |
@@ -134,9 +125,9 @@ pub struct Ppu {
     ly:     u8,
     lyc:    u8,
     dma:    u8,
-    bgp:    Bgp,
-    obp0:   u8,
-    obp1:   u8,
+    bgp:    Palette,
+    obp0:   Palette,
+    obp1:   Palette,
     wy:     u8,
     wx:     u8,
     vram:   Ram,
@@ -160,8 +151,8 @@ impl Io for Ppu {
             0xFF45  =>  self.lyc,
             0xFF46  =>  self.dma,
             0xFF47  =>  self.bgp.to_u8(),
-            0xFF48  =>  self.obp0,
-            0xFF49  =>  self.obp1,
+            0xFF48  =>  self.obp0.to_u8(),
+            0xFF49  =>  self.obp1.to_u8(),
             0xFF4A  =>  self.wy,
             0xFF4B  =>  self.wx,
             // ToDo: LCD Color Palettes (CGB only)
@@ -189,9 +180,9 @@ impl Io for Ppu {
                 self.dma    = data;
                 self.oam_dma_started = true;
             },
-            0xFF47  =>  self.bgp    = Bgp::from(data),
-            0xFF48  =>  self.obp0   = 0xFF,
-            0xFF49  =>  self.obp1   = 0xFF,
+            0xFF47  =>  self.bgp    = Palette::from(data),
+            0xFF48  =>  self.obp0   = Palette::from(data),
+            0xFF49  =>  self.obp1   = Palette::from(data),
             0xFF4A  =>  self.wy     = data,
             0xFF4B  =>  self.wx     = data,
             // ToDo: LCD Color Palettes (CGB only)
@@ -215,9 +206,9 @@ impl Ppu {
             ly:     0,
             lyc:    0,
             dma:    0,
-            bgp:    Bgp::new(),
-            obp0:   0,
-            obp1:   0,
+            bgp:    Palette::from(0xFC),
+            obp0:   Palette::from(0xFF),
+            obp1:   Palette::from(0xFF),
             wy:     0,
             wx:     0,
             vram:   Ram::new(),
@@ -365,7 +356,11 @@ impl Ppu {
                             x.wrapping_add(self.scx)%8, 
                             self.ly.wrapping_add(self.scy)%8);
             let base = self.ly as usize * SCREEN_WIDTH + x as usize;
-            self.pixels[base] = color;
+            self.pixels[base] = self.get_bg_palette()[color as usize];
+            // if x.wrapping_add(self.scx) == 3 && self.ly.wrapping_add(self.scy) == 3 {
+            //     println!("color={:?}", color);
+            //     println!("pixels[{}]={:?}", base, self.pixels[base]);
+            // }
         }
     }
 
@@ -403,14 +398,32 @@ impl Ppu {
                     let color = self.get_sprite_color(attr.tileid(), x%8, y%height, height);
                     let base = posx.wrapping_add(attr.offsetx()) as usize
                                 + (posy.wrapping_add(attr.offsety()) as usize * SCREEN_WIDTH);
-                    self.pixels[base] = color;
+                    if color != 0 {
+                        self.pixels[base] = self.get_sprite_palette(*attr)[color as usize];
+                    }
                 }
             }
         }
     }
 
     fn build_window_tile(&mut self) {
-        
+
+    }
+
+    fn get_bg_palette(&self) -> [u8; 4] {
+        [   self.bgp.dot_00.to_u8(), self.bgp.dot_01.to_u8(),
+            self.bgp.dot_10.to_u8(), self.bgp.dot_11.to_u8()]
+    }
+
+    fn get_sprite_palette(&self, oam: Oam) -> [u8; 4] {
+        if oam.flags.contains(OamFlags::PALETTE_NO) {
+            return [self.obp1.dot_00.to_u8(), self.obp1.dot_01.to_u8(),
+                    self.obp1.dot_10.to_u8(), self.obp1.dot_11.to_u8()]
+        }
+
+        [   self.obp0.dot_00.to_u8(), self.obp0.dot_01.to_u8(),
+            self.obp0.dot_10.to_u8(), self.obp0.dot_11.to_u8()]
+
     }
 
     fn get_tileid(&self, index: u16) -> u8 {
@@ -436,8 +449,8 @@ impl Ppu {
             let line1 = self.read8(addr+i*2);
             let line2 = self.read8(addr+i*2+1);
             for j in 0..8 {
-                let msb = (line1 >> (7-j)) & 0x01;
-                let lsb = (line2 >> (7-j)) & 0x01;
+                let lsb = (line1 >> (7-j)) & 0x01;
+                let msb = (line2 >> (7-j)) & 0x01;
                 pixels.push((msb<<1)+lsb);
             }
         }
@@ -453,8 +466,8 @@ impl Ppu {
             let line1 = self.read8(addr+i*2);
             let line2 = self.read8(addr+i*2+1);
             for j in 0..8 {
-                let msb = (line1 >> (7-j)) & 0x01;
-                let lsb = (line2 >> (7-j)) & 0x01;
+                let lsb = (line1 >> (7-j)) & 0x01;
+                let msb = (line2 >> (7-j)) & 0x01;
                 pixels.push((msb<<1)+lsb);
             }
         }
