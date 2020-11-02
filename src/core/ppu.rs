@@ -230,7 +230,9 @@ impl Ppu {
         if self.clock >= CYCLE_PER_LINE {
             if self.ly == SCREEN_HEIGHT as u8 {
                 vblank_irq = true;
-                self.build_sprite();
+                if self.sprite_on() {
+                    self.build_sprite();
+                }
                 if self.stat.contains(Stat::INTR_LYC) {
                     lcdc_irq = true;
                 }
@@ -239,7 +241,7 @@ impl Ppu {
                 self.build_bg();
             } else if self.ly < SCREEN_HEIGHT as u8 {
                 self.build_bg();
-                if self.lcdc.contains(Lcdc::WIN_EN) {
+                if self.window_on() {
                     self.build_window();
                 }
             }
@@ -339,12 +341,16 @@ impl Ppu {
         self.lcdc.contains(Lcdc::OBJ_EN)
     }
 
+    fn window_on(&self) -> bool {
+        self.lcdc.contains(Lcdc::OBJ_EN)
+    }
+
     fn build_bg(&mut self) {
         for x in 0..SCREEN_WIDTH as u8 {
             let y = self.ly.wrapping_add(self.scy) as u16 / 8 * 32;
             let index = x.wrapping_add(self.scx) as u16 / 8 % 32 + y;
-            let tileid = self.get_tileid(index);
-            let color = self.get_color(tileid, 
+            let tileid = self.get_bg_tileid(index);
+            let color = self.get_bg_color(tileid, 
                             x.wrapping_add(self.scx)%8, 
                             self.ly.wrapping_add(self.scy)%8);
             let base = self.ly as usize * SCREEN_WIDTH + x as usize;
@@ -353,16 +359,11 @@ impl Ppu {
     }
 
     fn build_sprite(&mut self) {
-        if !self.sprite_on() {
-            return;
-        }
-        
+        let height = self.sprite_size();
         for attr in self.oam.iter() {
-            let height = self.sprite_size();
             if attr.x == 0 {
                 continue;
             }
-
             for x in 0..8 as u8 {
                 for y in 0.. height {
                     if  x.wrapping_add(attr.offsetx()) == 0 ||
@@ -407,7 +408,7 @@ impl Ppu {
             let y = self.ly.wrapping_sub(self.wy) as u16 / 8 * 32;
             let index = x.wrapping_sub(posx) as u16 / 8 % 32 + y;
             let tileid = self.get_window_tileid(index);
-            let color = self.get_color(tileid, 
+            let color = self.get_bg_color(tileid, 
                             x.wrapping_sub(posx)%8, 
                             self.ly.wrapping_sub(self.wy)%8);
             let base = self.ly as usize * SCREEN_WIDTH + x as usize;
@@ -432,7 +433,7 @@ impl Ppu {
 
     }
 
-    fn get_tileid(&self, index: u16) -> u8 {
+    fn get_bg_tileid(&self, index: u16) -> u8 {
         let addr = index as usize + self.bg_tilemap_offset();
         self.read8(addr)
     }
@@ -452,7 +453,7 @@ impl Ppu {
         offset + (tileid as usize * 0x10)
     }
 
-    fn get_color(&self, tileid: u8, x: u8, y: u8) -> u8 {
+    fn get_bg_color(&self, tileid: u8, x: u8, y: u8) -> u8 {
         let addr = self.get_tile_addr(tileid);
         let mut pixels = Vec::new();
 
@@ -486,7 +487,6 @@ impl Ppu {
         pixels[(x+y*8) as usize]
     }
 }
-
 
 bitflags! {
     struct OamFlags: u8 {

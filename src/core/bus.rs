@@ -139,7 +139,6 @@ impl Io for Bus {
             0xFEA0 ..= 0xFEFF   =>  0,
             // I/O ports
             0xFF00              =>  self.pad.read8(),
-            // 0xFF00 ..= 0xFF3B   =>  self.ioports.read8(addr),
             // Timer
             0xFF04 ..= 0xFF07   =>  self.timer.read8(addr),
             // Interrupt Flag Register
