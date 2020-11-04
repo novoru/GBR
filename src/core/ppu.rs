@@ -342,7 +342,7 @@ impl Ppu {
     }
 
     fn window_on(&self) -> bool {
-        self.lcdc.contains(Lcdc::OBJ_EN)
+        self.lcdc.contains(Lcdc::WIN_EN)
     }
 
     fn build_bg(&mut self) {
@@ -430,7 +430,6 @@ impl Ppu {
 
         [   self.obp0.dot_00.to_u8(), self.obp0.dot_01.to_u8(),
             self.obp0.dot_10.to_u8(), self.obp0.dot_11.to_u8()]
-
     }
 
     fn get_bg_tileid(&self, index: u16) -> u8 {
