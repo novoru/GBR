@@ -3303,11 +3303,7 @@ impl Cpu {
                 opcode:     0xC4,
                 cycles:     12,
                 operation:  |cpu| {
-                    let lo = cpu.bus.read8(cpu.pc as usize);
-                    cpu.pc += 1;
-                    let hi = cpu.bus.read8(cpu.pc as usize);
-                    cpu.pc += 1;
-                    let nn = ((hi as u16) << 8) | lo as u16;
+                    let nn = cpu.fetch16();
                     if !cpu.f.contains(Flags::Z) {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
@@ -3409,11 +3405,7 @@ impl Cpu {
                 opcode:     0xCC,
                 cycles:     12,
                 operation:  |cpu| {
-                    let lo = cpu.bus.read8(cpu.pc as usize);
-                    cpu.pc += 1;
-                    let hi = cpu.bus.read8(cpu.pc as usize);
-                    cpu.pc += 1;
-                    let nn = ((hi as u16) << 8) | lo as u16;
+                    let nn = cpu.fetch16();
                     if cpu.f.contains(Flags::Z) {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
@@ -3427,11 +3419,7 @@ impl Cpu {
                 opcode:     0xCD,
                 cycles:     12,
                 operation:  |cpu| {
-                    let lo = cpu.bus.read8(cpu.pc as usize);
-                    cpu.pc += 1;
-                    let hi = cpu.bus.read8(cpu.pc as usize);
-                    cpu.pc += 1;
-                    let nn = ((hi as u16) << 8) | lo as u16;
+                    let nn = cpu.fetch16();
                     cpu.push((cpu.pc >> 8) as u8);
                     cpu.push((cpu.pc & 0xFF) as u8);
                     cpu.pc = nn;
@@ -3518,11 +3506,7 @@ impl Cpu {
                 opcode:     0xD4,
                 cycles:     12,
                 operation:  |cpu| {
-                    let lo = cpu.bus.read8(cpu.pc as usize);
-                    cpu.pc += 1;
-                    let hi = cpu.bus.read8(cpu.pc as usize);
-                    cpu.pc += 1;
-                    let nn = ((hi as u16) << 8) | lo as u16;
+                    let nn = cpu.fetch16();
                     if !cpu.f.contains(Flags::C) {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
@@ -3622,11 +3606,7 @@ impl Cpu {
                 opcode:     0xDC,
                 cycles:     12,
                 operation:  |cpu| {
-                    let lo = cpu.bus.read8(cpu.pc as usize);
-                    cpu.pc += 1;
-                    let hi = cpu.bus.read8(cpu.pc as usize);
-                    cpu.pc += 1;
-                    let nn = ((hi as u16) << 8) | lo as u16;
+                    let nn = cpu.fetch16();
                     if cpu.f.contains(Flags::C) {
                         cpu.push((cpu.pc >> 8) as u8);
                         cpu.push((cpu.pc & 0xFF) as u8);
