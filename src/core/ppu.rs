@@ -221,11 +221,9 @@ impl Ppu {
     }
 
     pub fn tick(&mut self) -> (Option<InterruptKind>, Option<InterruptKind>) {
-        self.update_mode();
-        self.clock += 4;
-
         let mut vblank_irq = false;
-        let mut lcdc_irq = false;
+        let mut lcdc_irq = self.update_mode();
+        self.clock = self.clock.wrapping_add(4);
 
         if self.clock >= CYCLE_PER_LINE {
             if self.ly == SCREEN_HEIGHT as u8 {
@@ -233,7 +231,7 @@ impl Ppu {
                 if self.sprite_on() {
                     self.build_sprite();
                 }
-                if self.stat.contains(Stat::INTR_LYC) {
+                if self.stat.contains(Stat::INTR_M1) {
                     lcdc_irq = true;
                 }
             } else if self.ly >= (SCREEN_HEIGHT as u8 + LCD_BLANK_HEIGHT) {
@@ -252,11 +250,10 @@ impl Ppu {
                     lcdc_irq = true;
                 }
             } else {
-                self.stat.remove(Stat::MODE_FLAG1);
-                self.stat.remove(Stat::MODE_FLAG0);
+                self.switch_mode(PpuMode::HBlank);
             }
-            self.ly += 1;
-            self.clock -= CYCLE_PER_LINE;
+            self.ly = self.ly.wrapping_add(1);
+            self.clock = self.clock.wrapping_sub(CYCLE_PER_LINE);
         }
 
         match (vblank_irq, lcdc_irq) {
@@ -318,7 +315,8 @@ impl Ppu {
         }
     }
 
-    fn update_mode(&mut self) {
+    fn update_mode(&mut self) -> bool {
+        let mut lcdc_irq = false;
         if self.ly > SCREEN_HEIGHT as u8 {
             self.switch_mode(PpuMode::VBlank);
         } else if self.clock <= 80 {
@@ -327,7 +325,12 @@ impl Ppu {
             self.switch_mode(PpuMode::TransferPixels);
         } else {
             self.switch_mode(PpuMode::HBlank);
+            if self.stat.contains(Stat::INTR_M0) {
+                lcdc_irq = true;
+            }
         }
+
+        lcdc_irq
     }
 
     fn sprite_size(&self) -> u8 {
@@ -450,7 +453,7 @@ impl Ppu {
         let offset = self.tiledata_offset();
 
         if offset == TILEDATA0_OFFSET {
-            return (tileid.wrapping_add(0x80) as usize) * 0x10 + TILEDATA0_OFFSET;
+            return offset + (tileid.wrapping_add(0x80) as usize) * 0x10;
         }
 
         offset + (tileid as usize * 0x10)
