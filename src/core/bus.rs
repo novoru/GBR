@@ -138,7 +138,7 @@ impl Io for Bus {
             // Empty but unusable for I/O
             0xFEA0 ..= 0xFEFF   =>  0,
             // I/O ports
-            0xFF00              =>  self.pad.read8(),
+            0xFF00              =>  self.pad.read8(addr),
             // Timer
             0xFF04 ..= 0xFF07   =>  self.timer.read8(addr),
             // Interrupt Flag Register
@@ -174,7 +174,7 @@ impl Io for Bus {
             // Empty but unusable for I/O
             0xFEA0 ..= 0xFEFF   =>  (),
             // I/O ports
-            0xFF00              =>  self.pad.write8(data),
+            0xFF00              =>  self.pad.write8(addr, data),
             // Timer
             0xFF04 ..= 0xFF07   =>  self.timer.write8(addr, data),
             // Sound Channel 1 - Tone & Sweep

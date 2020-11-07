@@ -144,16 +144,6 @@ impl Interrupt {
             InterruptKind::Joypad       =>  self.irqf.remove(If::JOYPAD),
         }
     }
-
-    pub fn _is_set(&self, kind: InterruptKind) -> bool {
-        match kind {
-            InterruptKind::Vblank       =>  self.irqf.contains(If::VBLANK),
-            InterruptKind::LcdcStatus   =>  self.irqf.contains(If::LCDC),
-            InterruptKind::Timer        =>  self.irqf.contains(If::TIMER),
-            InterruptKind::Serial       =>  self.irqf.contains(If::SERIAL),
-            InterruptKind::Joypad       =>  self.irqf.contains(If::JOYPAD),
-        }
-    }
 }
 
 impl Io for Interrupt {

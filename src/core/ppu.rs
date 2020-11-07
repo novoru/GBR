@@ -108,7 +108,7 @@ const OAM_SPRITES:      usize   = 40;
 // const OAM_OFFSET:       usize   = 0xFE00;
 // const LCDC_ADDR:        usize   = 0xFF40;
 // const STAT_ADDR:        usize   = 0xFF41;
-const CYCLE_PER_LINE: u16 = 456;
+const CLOCKS_PER_LINE: u16 = 456;
 const TILEMAP0_OFFSET: usize = 0x9800;
 const TILEMAP1_OFFSET: usize = 0x9C00;
 const TILEDATA0_OFFSET: usize = 0x8800;
@@ -225,7 +225,7 @@ impl Ppu {
         let mut lcdc_irq = self.update_mode();
         self.clock = self.clock.wrapping_add(4);
 
-        if self.clock >= CYCLE_PER_LINE {
+        if self.clock >= CLOCKS_PER_LINE {
             if self.ly == SCREEN_HEIGHT as u8 {
                 vblank_irq = true;
                 if self.sprite_on() {
@@ -253,7 +253,7 @@ impl Ppu {
                 self.switch_mode(PpuMode::HBlank);
             }
             self.ly = self.ly.wrapping_add(1);
-            self.clock = self.clock.wrapping_sub(CYCLE_PER_LINE);
+            self.clock = self.clock.wrapping_sub(CLOCKS_PER_LINE);
         }
 
         match (vblank_irq, lcdc_irq) {

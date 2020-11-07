@@ -1,5 +1,7 @@
 use bitflags::*;
 
+use crate::core::io::Io;
+
 bitflags!{
     struct P1: u8 {
         const P15   = 0b00100000;
@@ -52,22 +54,6 @@ impl Pad {
         }
     }
 
-    pub fn read8(&self) -> u8 {
-        if !self.register.contains(P1::P15) {
-            return self.register.bits() & 0xF0 | (self.state.bits() >> 4) & 0x0F;
-        }
-
-        if !self.register.contains(P1::P14) {
-            return self.register.bits() & 0xF0 | self.state.bits() & 0x0F;
-        }
-
-        self.register.bits() & 0x0F
-    }
-
-    pub fn write8(&mut self, data: u8) {
-        self.register = P1::from_bits_truncate(data);
-    }
-
     pub fn push_key(&mut self, key: Key) {
         match key {
             Key::Right  =>  self.state.remove(KeyState::RIGHT),
@@ -94,4 +80,22 @@ impl Pad {
         }
     }
 
+}
+
+impl Io for Pad {
+    fn read8(&self, _addr: usize) -> u8 {
+        if !self.register.contains(P1::P15) {
+            return self.register.bits() & 0xF0 | (self.state.bits() >> 4) & 0x0F;
+        }
+
+        if !self.register.contains(P1::P14) {
+            return self.register.bits() & 0xF0 | self.state.bits() & 0x0F;
+        }
+
+        self.register.bits() & 0x0F
+    }
+
+    fn write8(&mut self, _addr: usize, data: u8) {
+        self.register = P1::from_bits_truncate(data);
+    }
 }

@@ -10,6 +10,8 @@ use crate::core::pad::Key;
 
 const SCREEN_WIDTH:     u32 = 160;
 const SCREEN_HEIGHT:    u32 = 144;
+const NLINES: usize = 154;
+const CYCLE_PER_LINE: usize = 114;
 
 const COLORS: [[u8; 4]; 5] = [
     [0x9B, 0xBC, 0x0F, 0xFF],   // Lightest Green (#9BBC0F)
@@ -57,7 +59,7 @@ impl MainWindow {
 
 impl EventHandler for MainWindow {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        for _ in 0..154*114 {
+        for _ in 0..NLINES*CYCLE_PER_LINE {
             self.cpu.tick();
         }
         self.update_pixels(self.cpu.get_pixels());
