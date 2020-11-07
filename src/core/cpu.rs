@@ -45,14 +45,14 @@ impl fmt::Display for Cpu {
 impl Cpu {
     pub fn _new() -> Self {
         Cpu {
-            a:      0x01,
+            a:      0x11,
             b:      0x00,
-            d:      0x00,
-            h:      0x01,
-            c:      0x13,
-            e:      0xD8,
-            l:      0x4D,
-            f:      Flags::from_bits_truncate(0xB0),
+            d:      0xFF,
+            h:      0x00,
+            c:      0x00,
+            e:      0x56,
+            l:      0x0D,
+            f:      Flags::from_bits_truncate(0x80),
             sp:     0xFFFE,
             pc:     0x100,
             bus:    Bus::_no_cartridge(),
@@ -62,14 +62,14 @@ impl Cpu {
     
     pub fn from_path(path: &Path) -> Self {
         Cpu {
-            a:      0x01,
+            a:      0x11,
             b:      0x00,
-            d:      0x00,
-            h:      0x01,
-            c:      0x13,
-            e:      0xD8,
-            l:      0x4D,
-            f:      Flags::from_bits_truncate(0xB0),
+            d:      0xFF,
+            h:      0x00,
+            c:      0x00,
+            e:      0x56,
+            l:      0x0D,
+            f:      Flags::from_bits_truncate(0x80),
             sp:     0xFFFE,
             pc:     0x100,
             bus:    Bus::from_path(path),

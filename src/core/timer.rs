@@ -38,21 +38,12 @@ impl Timer {
 
     pub fn tick(&mut self) -> bool {
         let mut overflow = false;
-        self.count = self.count.wrapping_add(1);
+        self.count = self.count.wrapping_add(4);
         if self.tac.contains(Tac::TIMER_EN) {
             match self.tac.bits() & 0b11 {
                 0b00    =>  {
                     if self.count % TAC00_DIV == 0 {
-                        self.tima = self.tima.wrapping_add(1);
-                        if self.tima == 0 {
-                            self.tima = self.tma;
-                            overflow = true;
-                        }
-                    }
-                },
-                0b10    =>  {
-                    if self.count % TAC01_DIV == 0 {
-                        self.tima = self.tima.wrapping_add(1);
+                        self.tima = self.tima.wrapping_add(4);
                         if self.tima == 0 {
                             self.tima = self.tma;
                             overflow = true;
@@ -60,8 +51,17 @@ impl Timer {
                     }
                 },
                 0b01    =>  {
+                    if self.count % TAC01_DIV == 0 {
+                        self.tima = self.tima.wrapping_add(4);
+                        if self.tima == 0 {
+                            self.tima = self.tma;
+                            overflow = true;
+                        }
+                    }
+                },
+                0b10    =>  {
                     if self.count % TAC10_DIV == 0 {
-                        self.tima = self.tima.wrapping_add(1);
+                        self.tima = self.tima.wrapping_add(4);
                         if self.tima == 0 {
                             self.tima = self.tma;
                             overflow = true;
@@ -70,7 +70,7 @@ impl Timer {
                 },
                 0b11    =>  {
                     if self.count % TAC11_DIV == 0 {
-                        self.tima = self.tima.wrapping_add(1);
+                        self.tima = self.tima.wrapping_add(4);
                         if self.tima == 0 {
                             self.tima = self.tma;
                             overflow = true;
@@ -80,7 +80,7 @@ impl Timer {
                 _       =>  panic!(),
             }
         }
-        if self.count % DIV == 0 { self.div = self.div.wrapping_add(1); }
+        if self.count % DIV == 0 { self.div = self.div.wrapping_add(4); }
 
         overflow
     }
