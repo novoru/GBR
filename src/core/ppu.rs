@@ -353,7 +353,7 @@ impl Ppu {
             let color = self.get_bg_color(tileid, 
                             x.wrapping_add(self.scx)%8, 
                             self.ly.wrapping_add(self.scy)%8);
-            let base = self.ly as usize * SCREEN_WIDTH + x as usize;
+            let base = (self.ly as usize * SCREEN_WIDTH + x as usize)%(SCREEN_HEIGHT*SCREEN_WIDTH);
             self.pixels[base] = self.get_bg_palette()[color as usize];
         }
     }
@@ -385,8 +385,9 @@ impl Ppu {
                         posy = 7 - y;
                     }
                     let color = self.get_sprite_color(attr.tileid(), x%8, y%height, height);
-                    let base = posx.wrapping_add(attr.offsetx()) as usize
-                                + (posy.wrapping_add(attr.offsety()) as usize * SCREEN_WIDTH);
+                    let base = ((posx.wrapping_add(attr.offsetx()) as usize
+                                + (posy.wrapping_add(attr.offsety()) as usize * SCREEN_WIDTH)))
+                                %(SCREEN_HEIGHT*SCREEN_WIDTH);
                     if color != 0 {
                         self.pixels[base] = self.get_sprite_palette(*attr)[color as usize];
                     }
@@ -405,6 +406,9 @@ impl Ppu {
 
         for x in 0..SCREEN_WIDTH as u8 {
             let posx = self.wx.wrapping_sub(7);
+            if x < posx {
+                continue;
+            }
             let y = self.ly.wrapping_sub(self.wy) as u16 / 8 * 32;
             let index = x.wrapping_sub(posx) as u16 / 8 % 32 + y;
             let tileid = self.get_window_tileid(index);
