@@ -369,15 +369,6 @@ impl Ppu {
             }
             for x in 0..8 as u8 {
                 for y in 0.. height {
-                    if  x.wrapping_add(attr.offsetx()) == 0 ||
-                        x.wrapping_add(attr.offsetx()) >= SCREEN_WIDTH as u8 {
-                        continue;
-                    }
-                    if y.wrapping_add(attr.offsety()) == 0 ||
-                       y.wrapping_add(attr.offsety()) >= SCREEN_HEIGHT as u8 {
-                        continue;
-                    }
-
                     let mut posx = x;
                     let mut posy = y;
 
@@ -387,6 +378,14 @@ impl Ppu {
                     if attr.is_yflip() {
                         posy = 7 - y;
                     }
+
+                    if posx.wrapping_add(attr.offsetx()) >= SCREEN_WIDTH as u8 {
+                        continue;
+                    }
+                    if posy.wrapping_add(attr.offsety()) >= SCREEN_HEIGHT as u8 {
+                        continue;
+                    }
+
                     let color = self.get_sprite_color(attr.tileid(), x%8, y%height, height);
                     let base = ((posx.wrapping_add(attr.offsetx()) as usize
                                 + (posy.wrapping_add(attr.offsety()) as usize * SCREEN_WIDTH)))
