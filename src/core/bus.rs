@@ -127,7 +127,7 @@ impl Io for Bus {
             0x4000 ..= 0x7FFF   =>  self.cartridge.read8(addr),
             // 8kB Video RAM
             0x8000 ..= 0x9FFF   =>  self.ppu.read8(addr),
-            // 8kB switchable RAM ban
+            // 8kB switchable RAM bank
             0xA000 ..= 0xBFFF   =>  self.cartridge.read8(addr),
             // 8kB Internal RAM
             0xC000 ..= 0xDFFF   =>  self.ram.read8(addr&0x1FFF),
